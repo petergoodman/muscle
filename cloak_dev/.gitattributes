@@ -1,0 +1,8 @@
+# Scripts keep LF line endings so they run unchanged in Debian and on a cluster.
+*.sh     text eol=lf
+*.slurm  text eol=lf
+*.py     text eol=lf
+*.yml    text eol=lf
+*.txt    text eol=lf
+# Test data are compared byte for byte: never convert them.
+tests/data/** -text

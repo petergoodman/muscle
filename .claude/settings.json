@@ -1,0 +1,48 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git push origin cloak)",
+      "Bash(gh auth status*)",
+      "Bash(gh run list*)", "Bash(gh run view*)",
+      "Bash(gh workflow list*)", "Bash(gh workflow view*)",
+      "Bash(gh api repos/petergoodman/muscle/*)"
+    ],
+    "deny": [
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git push --force-with-lease *)",
+      "Bash(git push * --force*)",
+      "Bash(git push * -f *)",
+      "Bash(git push * -f)",
+      "Bash(git push * +*)",
+      "Bash(git push --mirror *)",
+      "Bash(git push --tags*)",
+      "Bash(git push * --tags*)",
+      "Bash(git push --delete *)",
+      "Bash(git push * --delete *)",
+      "Bash(git push -d *)",
+      "Bash(git push * -d *)",
+      "Bash(git push upstream*)",
+      "Bash(git push * upstream*)",
+      "Bash(git push * dev*)",
+      "Bash(git push * *:dev*)",
+      "Bash(git push * main*)",
+      "Bash(git push * *:main*)",
+      "Bash(git push * cloak-v*)",
+      "Bash(git tag -d *)",
+      "Bash(git tag -f *)",
+      "Bash(git tag * -f*)",
+      "Bash(git reset --hard *)",
+      "Bash(git checkout -- *)",
+      "Bash(rm -rf *)",
+      "Bash(gh pr *)", "Bash(gh issue *)",
+      "Bash(gh auth token*)", "Bash(gh auth status*--show-token*)", "Bash(gh auth status* -t*)",
+      "Bash(gh api*-X*)", "Bash(gh api*--method*)", "Bash(gh api* -f*)", "Bash(gh api* -F*)",
+      "Bash(gh api*--field*)", "Bash(gh api*--raw-field*)", "Bash(gh api*--input*)",
+      "Edit(./cloak_dev/tests/data/**)", "Write(./cloak_dev/tests/data/**)",
+      "Edit(./test_data/**)", "Write(./test_data/**)",
+      "Edit(./test_scripts/**)", "Write(./test_scripts/**)",
+      "Edit(./.github/**)", "Write(./.github/**)"
+    ]
+  }
+}

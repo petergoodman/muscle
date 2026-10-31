@@ -1,0 +1,10 @@
+# Python for cloak_dev/tools (standard library only). Create once, in a Debian terminal:
+#   ~/anaconda3/bin/conda env create -f /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/environment.yml
+# Use:
+#   ~/anaconda3/bin/conda run --no-capture-output -n muscle-cloak python cloak_dev/tools/<script>.py ...
+name: muscle-cloak
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.11
