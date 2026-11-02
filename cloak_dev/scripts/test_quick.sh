@@ -8,8 +8,12 @@
 #                           the expected outputs reproduce on this machine (about 1 min)
 #     --check-baseline-slow also the two slow cases (about 4 min, up to 1.3 GB)
 #
-# Every run is capped at 4 GB of virtual memory and 120 s. Outputs go to a new directory under
-# ~/muscle-runs/test_quick/. Exit status 0 only if every compared case is byte-identical.
+# scripts/check_fixtures.sh runs first (decision 009). Every run is capped at 4 GB of virtual
+# memory and 120 s (600 s for the baseline on the slow cases). The cases with a baseline column of
+# fast or slow keep every row (checked 2026-11-01), so decision 003's relation reduces to byte
+# identity with the expected output for the baseline too. Outputs go to a new directory under
+# ~/muscle-runs/test_quick/. Exit status 0 only if every case read from MANIFEST.tsv is compared and
+# byte-identical.
 set -uo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
 DATA="$HERE/../tests/data"
@@ -25,14 +29,15 @@ for a in "$@"; do
   esac
 done
 [ -x "$BIN" ] || { echo "binary not found: $BIN" >&2; exit 2; }
+bash "$HERE/check_fixtures.sh" || exit 2
 OUT="$HOME/muscle-runs/test_quick/$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$OUT"
 
-run_case() {  # label binary efa mincol expected -> prints one result line, returns 0 if identical
-  local label=$1 bin=$2 efa=$3 mc=$4 exp=$5 name t0 t1 rc
+run_case() {  # label binary efa mincol expected [timeout] -> one result line, 0 if identical
+  local label=$1 bin=$2 efa=$3 mc=$4 exp=$5 cap=${6:-120} name t0 t1 rc
   name="$label.$(basename "$efa" .efa).m$mc"
   t0=$(date +%s.%N)
-  ( ulimit -v 4000000; timeout 120 "$bin" -cloak "$DATA/$efa" -mincol "$mc" -output "$OUT/$name.fa" > "$OUT/$name.log" 2>&1 )
+  ( ulimit -v 4000000; timeout "$cap" "$bin" -cloak "$DATA/$efa" -mincol "$mc" -output "$OUT/$name.fa" > "$OUT/$name.log" 2>&1 )
   rc=$?
   t1=$(date +%s.%N)
   local secs; secs=$(awk -v a="$t0" -v b="$t1" 'BEGIN{printf "%.2f", b-a}')
@@ -46,13 +51,18 @@ run_case() {  # label binary efa mincol expected -> prints one result line, retu
 echo "candidate: $BIN"
 [ -f "$(dirname "$(dirname "$BIN")")/BUILD_INFO.txt" ] && sed 's/^/  /' "$(dirname "$(dirname "$BIN")")/BUILD_INFO.txt"
 echo "outputs:   $OUT"
-pass=0; fail=0
-while IFS=$'\t' read -r efa mc exp _src base; do
+pass=0; fail=0; cases=0
+while IFS=$'\t' read -r efa mc exp _src base || [ -n "$efa" ]; do
+  base=${base%$'\r'}
   [ "$efa" = "ensemble" ] && continue
+  cases=$((cases+1))
   if run_case candidate "$BIN" "$efa" "$mc" "$exp"; then pass=$((pass+1)); else fail=$((fail+1)); fi
   if { [ "$CHECK" = fast ] && [ "$base" = fast ]; } || { [ "$CHECK" = slow ] && [ "$base" != never ]; }; then
-    if run_case baseline "$BASE" "$efa" "$mc" "$exp"; then pass=$((pass+1)); else fail=$((fail+1)); fi
+    cap=120; [ "$base" = slow ] && cap=600
+    if run_case baseline "$BASE" "$efa" "$mc" "$exp" "$cap"; then pass=$((pass+1)); else fail=$((fail+1)); fi
   fi
 done < "$DATA/MANIFEST.tsv"
-echo "passed $pass, failed $fail" | tee "$OUT/SUMMARY.txt"
+want=$(($(grep -c . "$DATA/MANIFEST.tsv") - 1))
+[ "$cases" -eq "$want" ] || { echo "read $cases cases, MANIFEST.tsv has $want" >&2; fail=$((fail+1)); }
+echo "cases $cases: passed $pass, failed $fail" | tee "$OUT/SUMMARY.txt"
 [ $fail -eq 0 ]

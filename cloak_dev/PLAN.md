@@ -2,8 +2,9 @@
 
 > **Status, 2026-11-01: phase 0 (setup) complete. Phase 1 is now the release `cloak-v0.3.0`: the
 > speed rewrite of `ddc9df1` (gate A passed 2026-10-30) plus the corrections the reviews of
-> 2026-10-30 and 2026-11-01 found, built test first. Step 1 (records, push) is done; next is the
-> test infrastructure (phase 1, step 2).** Peter owns this document.
+> 2026-10-30 and 2026-11-01 found, built test first. Steps 1 to 3 are done (records, test
+> infrastructure, gate B0 passed on 2026-11-02); next is step 4, the code changes.** Peter owns
+> this document.
 
 This is the project's living core document: what we are building and why, the constraints, the
 phases and their gates, open questions, where it stands, and the next step. It is read at the
@@ -24,11 +25,12 @@ can be offered upstream. CLOAK stays a C++ command inside MUSCLE (decision 001).
 1. Code changes stay in `src/cloak.cpp` and its three one-line hooks; Edgar's code is not edited.
 2. Every release relates exactly to `cloak-v0.1.0` as decision 003 states, and is checked against
    the published definition.
-3. Every output-changing behaviour change is approved by Peter, and by the users whose results it
-   changes, before it is implemented.
+3. Every output-changing behaviour change is approved by Peter before it is implemented, and the
+   output must agree with the three references for what CLOAK computes: the published definition,
+   `cloak.py`, and `cloak-v0.1.0` through decision 003's relation.
 4. Validation data owned by others are read only; validation writes only to Peter's directories.
-5. Expected outputs in `tests/data/` are never edited to make a test pass. They are added or
-   replaced only by Peter, for a change of specification recorded in `DECISIONS.md`.
+5. Existing test data are never changed to make a test pass; new test data may be added (decision
+   009).
 
 ## Phases and gates
 
@@ -101,7 +103,7 @@ Questions for other people are kept in `private/PROJECT_NOTES.md`.
 
 ## Current state and next step
 
-`ddc9df1` holds the speed rewrite and passed gate A on 2026-10-30; its binary is kept at
-`~/muscle-build/ref-ddc9df1/` for gate B0. The plan for 0.3.0 was approved on 2026-11-01, and its
-records are committed and pushed. Next step: the test infrastructure (phase 1, step 2); the users'
-reference data must be copied to WSL before gate B0 (step 3).
+`ddc9df1` holds the speed rewrite, passed gate A on 2026-10-30 and gate B0 on 2026-11-02; its binary
+is kept at `~/muscle-build/ref-ddc9df1/`, and Peter tags it `cloak-v0.2.0`. The test infrastructure
+is committed (`tests/README.md`), with the red step recorded in `CHANGELOG.md`. Next step: the rows
+commit (step 4), then errors and checked output, then `.` gaps.

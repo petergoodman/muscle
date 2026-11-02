@@ -1,8 +1,10 @@
 # Test fixtures
 
-Reference data for `cloak_dev/scripts/test_quick.sh`. Never edit, regenerate or delete a file
-here to make a test pass: a failing fixture is evidence. Changes to this directory are made by
-Peter only, with the reason in the commit message.
+Reference data for the test scripts in `cloak_dev/scripts/`. Never edit, regenerate or delete a
+file here to make a test pass: a failing fixture is evidence. New fixtures may be added by anyone,
+each with its line in `SHA256SUMS`; existing files and lines change only for a specification change
+recorded in `DECISIONS.md`, with Peter's explicit approval (decision 009).
+`scripts/check_fixtures.sh` checks this and runs first in every test script.
 
 `cloak_dev/.gitattributes` marks this directory `-text`, so Windows checkout does not convert
 line endings and the expected outputs stay byte-comparable.
@@ -40,3 +42,14 @@ All are 16-MSA ensembles in EFA format.
 These ensembles were chosen to exercise the code, not to match production data: gate B (`PLAN.md`,
 phase 1) is the test for that.
 
+### Hand fixtures
+
+`hand/MANIFEST.tsv` lists 42 cases on tiny ensembles written for cloak-v0.3.0. Their expected
+outputs were written by hand from the definition (decisions 007 and 008), and
+`tools/make_hand_fixtures.py --verify` confirms that `tools/spec_check.py` and
+`tools/oracle_direct.py` agree with every one; the same script regenerates this directory byte
+for byte. Columns: id; args (after the binary; `{out}` is the output path, other paths are relative
+to `hand/`, the working directory of every run); exit; expected output (`-` for none); v010 and
+v020, whether `f3559af` and `ddc9df1` are predicted to pass or fail the case; what the case
+targets. `scripts/test_hand.sh` runs them. A case with exit 1 also requires that nothing is written
+at the output path and no file appears in the working directory.

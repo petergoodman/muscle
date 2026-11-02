@@ -60,9 +60,14 @@ Not read at the start: `cloak_dev/AI_DISCLOSURE.md` and older CHANGELOG entries.
 # Debian terminal, any directory; conda off first (conda deactivate)
 bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/build.sh            # incremental
 bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/build.sh --full     # clean build
+bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test.sh edit       # after every build, ~1 min
+bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test.sh commit     # before every commit, ~5 min
+bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test.sh release    # gate A
 bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test_quick.sh       # 23 fixtures
+bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test_hand.sh        # 42 hand cases
 bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test_random.sh 200  # 800 random comparisons
 # binary: ~/muscle-build/dev/bin/muscle; BUILD_INFO.txt beside bin/ records commit and src state
+# test design, oracles, tiers and measurements: cloak_dev/tests/README.md
 ```
 
 - `build.sh` checks out the working copy's HEAD in `~/muscle-build/dev`, mirrors the tracked
@@ -71,8 +76,13 @@ bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test_random.sh 2
   `-version`; an incremental build leaves the stamp at the last full build. A gate build is `--full`
   from a clean commit, and its `BUILD_INFO.txt` must say `src state: clean`.
 - `test_quick.sh` byte-compares the candidate with the expected outputs; `--check-baseline` also
-  reruns the baseline on the fast cases. `test_random.sh` byte-compares candidate and baseline on
-  synthetic ensembles. Both exit nonzero on any difference.
+  reruns the baseline on the fast cases. `test_hand.sh` runs the hand cases (exact exit status;
+  `--predict v010|v020` records the red step). `test_random.sh` and `test.sh` run random ensembles
+  through every oracle (`tools/run_suite.py`). All exit nonzero on any failure or skip, and all
+  start with `check_fixtures.sh`.
+- `gate_b.sh DATA LIST BINARY bytes|strip` is gate B on the users' data (paths and pass lines in
+  the private notes); `smoke_check.sh BINARY SHA256` is the users' one-minute check of a release.
+- Timing and peak memory: `tools/runmeasure.py` (WSL has no `/usr/bin/time`).
 - **Running WSL from Claude Code's Bash tool** (Git Bash): put multi-step commands in a script and
   run `MSYS_NO_PATHCONV=1 wsl.exe -d Debian -- bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/build.sh`.
   Without `MSYS_NO_PATHCONV=1`, Git Bash rewrites `/mnt/c/...`; `$VAR` inside
@@ -89,8 +99,9 @@ bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test_random.sh 2
   most one residue, and writes FASTA.
 - `cloak_dev/`: everything this fork adds besides CLOAK's code (the counterpart of `docs/agent/` in
   the IQ-TREE fork), so that a pull request to Edgar can leave it out in one step.
-  - `scripts/` build and test drivers; `tools/` Python helpers; `tests/data/` fixtures, never
-    edited (its `README.md`); `private/` project notes and cluster jobs, gitignored.
+  - `scripts/` build and test drivers; `tools/` Python helpers; `tests/data/` fixtures, added but
+    never changed (decision 009, `SHA256SUMS`, its `README.md`); `private/` project notes,
+    staging and cluster jobs, gitignored.
 - Not this project's: the rest of `src/`, `test_scripts/`, `test_data/`, `.github/` (Edgar's
   workflows, all manual-only).
 
@@ -123,6 +134,10 @@ bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test_random.sh 2
 - **Never contact Edgar or anyone else.** No agent opens issues or pull requests, comments, or
   emails. Peter handles all communication; questions for others go to
   `cloak_dev/private/PROJECT_NOTES.md`.
+- **Stage files by name**, never `git add -A` or `git add .`: local data folders in the working
+  copy are kept out of git only by `.git/info/exclude`. A local pre-push hook (`.git/hooks/pre-push`,
+  not tracked) refuses every push except `cloak`, `dev` and `cloak-v*` tags to `origin`, and runs
+  `check_public.sh`.
 - **Public content.** Tracked files and commit messages must contain nothing about collaborators,
   their projects or results, HPC paths, or private correspondence; that material lives only in
   `cloak_dev/private/` (gitignored, never pushed). Run `cloak_dev/scripts/check_public.sh` (Git

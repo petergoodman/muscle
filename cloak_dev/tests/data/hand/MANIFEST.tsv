@@ -1,0 +1,43 @@
+id	args	exit	expected	v010	v020	what
+H01	-cloak H01.efa -output {out}	0	expected/H01.fa	fail	fail	divvying, -mincol absent
+H01m0	-cloak H01.efa -output {out} -mincol 0	0	expected/H01.fa	fail	fail	-mincol 0 means 2
+H01m2	-cloak H01.efa -output {out} -mincol 2	0	expected/H01.fa	fail	fail	-mincol 2
+H02	-cloak H02.efa -output {out}	0	expected/H02.fa	pass	pass	column order within an MSA-0 column
+H03	-cloak H03.efa -output {out}	0	expected/H03.fa	pass	pass	order tie broken by a later MSA
+H04	-cloak H04.efa -output {out}	0	expected/H04.fa	fail	fail	rows: every row keeps at most one residue
+H05	-cloak H05.efa -output {out}	0	expected/H05.fa	fail	fail	rows: dropping left 1-residue columns
+H06	-cloak H06.efa -output {out}	0	expected/H06.fa	fail	fail	rows: dropping left an all-gap column
+H07	-cloak H07.efa -output {out}	0	expected/H07.fa	fail	fail	all-gap row and columns
+H08	-cloak H08.efa -output {out}	0	expected/H08.fa	fail	fail	'.' gaps, equal counts per row
+H08m3	-cloak H08.efa -output {out} -mincol 3	0	expected/H08m3.fa	fail	fail	'.' gaps, -mincol 3
+H09	-cloak H09.efa -output {out}	0	expected/H09.fa	pass	fail	trailing '.' in MSA 1
+H10	-cloak H10.efa -output {out}	0	expected/H01.fa	fail	fail	'.' gaps everywhere, all-'.' column
+H11	-cloak H11.efa -output {out}	0	expected/H11.fa	pass	pass	K = 1, lower case, label sort
+H12	-cloak H12.efa -output {out}	0	expected/H12.fa	pass	pass	bytewise label order
+H13	-cloak H13.efa -output {out}	0	expected/H13.fa	pass	pass	non-letter residues
+H14	-cloak H14.efa -output {out}	0	expected/H14.fa	pass	pass	wrapping at 60
+H15a	-cloak H15a.efa -output {out}	0	expected/H03.fa	pass	pass	CRLF, wrapped EFA with blanks
+H15b	-cloak H15b.efa -output {out}	0	expected/H08.fa	fail	fail	CRLF, wrapped EFA with '.'
+H15c	-cloak H15c.txt -output {out}	0	expected/H03.fa	pass	pass	CRLF path list, lower case
+H15d	-cloak H15d.txt -output {out}	0	expected/H08.fa	fail	fail	path list with '.'
+H16	-cloak H16.efa -output {out}	0	expected/H16.fa	fail	fail	label starting with '>'
+E01	-cloak H03.efa -output {out} -mincol 1	1	-	fail	fail	-mincol 1
+E02	-cloak missing.efa -output {out}	1	-	pass	pass	missing input
+E03	-cloak E03.efa -output {out}	1	-	pass	pass	empty input file
+E04	-cloak E04.txt -output {out}	1	-	fail	fail	path list naming no MSA (CR only)
+E05	-cloak E05.txt -output {out}	1	-	pass	pass	path list with an empty line
+E06	-cloak E06.txt -output {out}	1	-	fail	pass	FASTA files with no records
+E07	-cloak E07.efa -output {out}	1	-	pass	pass	EFA with a name and no MSA
+E08	-cloak E08.efa -output {out}	1	-	pass	pass	EFA with two names, one MSA
+E09	-cloak E09.efa -output {out}	1	-	pass	pass	label sets differ
+E10	-cloak E10.efa -output {out}	1	-	pass	pass	MSA 1 has more rows than MSA 0
+E11	-cloak E11.efa -output {out}	1	-	pass	pass	ungapped sequences differ
+E12	-cloak E12.efa -output {out}	1	-	pass	pass	duplicate label in MSA 0
+E13	-cloak E13.efa -output {out}	1	-	pass	pass	duplicate label in MSA 1 only
+E14	-cloak E14.efa -output {out}	1	-	pass	pass	rows of unequal length
+E15a	-cloak H01.efa -output {out} -mincol 3	1	-	pass	pass	no column survives
+E15b	-cloak E15b.efa -output {out}	1	-	pass	pass	one sequence
+E15c	-cloak H03.efa -output {out} -mincol 4294967295	1	-	pass	pass	largest -mincol
+E17	-cloak H03.efa -output nodir/out.fa	1	-	pass	pass	output directory missing
+E18	-cloak	1	-	pass	pass	-cloak without a value
+E19	-cloak E19.fa -output {out}	1	-	pass	pass	plain FASTA given as input

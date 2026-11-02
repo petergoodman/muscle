@@ -39,7 +39,6 @@
       "Bash(gh auth token*)", "Bash(gh auth status*--show-token*)", "Bash(gh auth status* -t*)",
       "Bash(gh api*-X*)", "Bash(gh api*--method*)", "Bash(gh api* -f*)", "Bash(gh api* -F*)",
       "Bash(gh api*--field*)", "Bash(gh api*--raw-field*)", "Bash(gh api*--input*)",
-      "Edit(./cloak_dev/tests/data/**)", "Write(./cloak_dev/tests/data/**)",
       "Edit(./test_data/**)", "Write(./test_data/**)",
       "Edit(./test_scripts/**)", "Write(./test_scripts/**)",
       "Edit(./.github/**)", "Write(./.github/**)"

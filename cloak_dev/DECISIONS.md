@@ -96,3 +96,15 @@ numbering residues the same way makes residue p of a row the same residue in eve
 Stockholm alignments use `.` (the fixture recipe's `sto2fa.py` removes it); MUSCLE writes only `-`.
 **Not chosen.** Numbering `.` as a residue (0.1.0, silently wrong); rejecting input that has `.`.
 **Since** 2026-11-01.
+
+### 009. Test data are added, never changed
+
+**Rule.** Anyone, agents included, may add files to `cloak_dev/tests/data/`, with their lines in
+`SHA256SUMS`. No existing file there is modified or deleted, and no `SHA256SUMS` line is changed,
+except an expected output replaced for a specification change in this file, with Peter's explicit
+approval. `scripts/check_fixtures.sh` runs first in every test script and fails on any change.
+**Why.** A changed expected output hides a failure; the checksums catch it whatever tool made it,
+while new tests need no manual copying.
+**Not chosen.** Blocking agents' edit tools on the whole directory (blocks additions, misses shell
+writes); trusting the rule alone.
+**Since** 2026-11-02.

@@ -164,6 +164,11 @@ holds for both `f3559af` and `ddc9df1` unless stated.
     warning, which leaves the rows of an MSA unequal in length; the loader then stops, or, since
     `MSA::AppendSeq` checks lengths only on every fourth sequence, overflows the heap. EFA input
     keeps these characters (2026-10-30 audit). (MUSCLE)
+12. **An MSA with fewer rows than MSA 0 crashes the loader.** `Ensemble::ToUpper` loops over MSA
+    0's row count in every MSA before `SortMSAs` compares the counts, so it reads past the rows of
+    a smaller MSA: an EFA with rows a, b in MSA 0 and a in MSA 1 exits 139 on both binaries
+    (verified 2026-11-02). A later MSA with more rows reaches the check and exits 1. A truncated
+    EFA can produce this. (MUSCLE)
 
 ## 6. Differences from cloak.py (phylowheeler/CLOAK d846718, verified)
 

@@ -4,6 +4,37 @@ Session history for the CLOAK work on the fork `petergoodman/muscle`, newest fir
 about ten lines: what was done, what failed and why, what is next. An entry that closes a gate
 also holds its gate record. The next session starts from the top entry.
 
+## 2026-11-02: test infrastructure, gate B0 on ddc9df1
+
+- **Decided** (Peter). Agents may add test data but never change it (decision 009, guarded by
+  `SHA256SUMS`). Constraint 3 now asks for agreement with the paper, `cloak.py` and 0.1.0, not
+  user approval. Timing uses `tools/runmeasure.py`. A local pre-push hook refuses everything except
+  `cloak`, `dev` and `cloak-v*` tags.
+- **Written.**
+  - Checker and loader model: `spec_check.py` with its tests, `cloakio.py`.
+  - Oracles and cases: `ref_cloakpy.py` (`cloak.py`'s own functions), `oracle_direct.py` (0.3.0),
+    `make_hand_fixtures.py` (42 hand cases, in `tests/data/hand/`), `gen_cases.py`, `run_suite.py`.
+  - Scripts: `test.sh`, `test_hand.sh`, `gate_b.sh`, `smoke_check.sh`, `check_fixtures.sh`, and
+    `test_quick.sh` and `test_random.sh` reworked. The design is in `tests/README.md`.
+- **Verified** (numbers in `tests/README.md`).
+  - Positive control: the harness on the byte oracle passes every hand and random case. That
+    includes 680 random comparisons with `f3559af` through decision 003's relation and 289 with
+    `cloak.py`.
+  - `cloak.py` agrees with every applicable hand case.
+- **Red step.** Hand cases: both binaries fail 16 of 42, as predicted. Random cases: 388 and 413
+  of 800 comparisons fail, every one explained by short rows or `.`.
+  `test.sh commit` on the oracle fails only on PF00353full_n1226_s5, whose MANIFEST row still
+  expects 0.1.0's output.
+- **Gate B0 passed** on `ddc9df1` (binary SHA-256 `c683e3b5...e2af1a`): every reference output
+  reproduced byte for byte, and every previously failing ensemble finished. Tables are in the
+  private notes.
+- **Found.** An MSA with fewer rows than MSA 0 crashes MUSCLE's loader (`ANALYSIS.md`, section 5,
+  item 12).
+- **Next.**
+  - Peter tags `cloak-v0.2.0` on `ddc9df1`.
+  - The rows commit (C1, drafted in `src/cloak.cpp`, not yet built). It needs Peter's approval to
+    point the PF00353full_n1226_s5 MANIFEST row at the 0.3.0 expected output.
+
 ## 2026-11-01: reviews, third audit, plan for cloak-v0.3.0
 
 - **Reviews.** Read the 2026-10-30 audit of `ddc9df1` and the 2026-11-01 review against the
