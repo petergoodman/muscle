@@ -4,6 +4,30 @@ Session history for the CLOAK work on the fork `petergoodman/muscle`, newest fir
 about ten lines: what was done, what failed and why, what is next. An entry that closes a gate
 also holds its gate record. The next session starts from the top entry.
 
+## 2026-11-01: reviews, third audit, plan for cloak-v0.3.0
+
+- **Reviews.** Read the 2026-10-30 audit of `ddc9df1` and the 2026-11-01 review against the
+  published definition (both moved to `private/reviews/`), then audited again: the grouping core
+  matches the definition, the code around it does not (`ANALYSIS.md`, section 5).
+- **Found.**
+  - Dropping rows after the column filter leaves columns with one residue or none (both binaries,
+    two 4-row ensembles).
+  - Writes are unchecked, so a failed write exits 0.
+  - A leading `>` is stripped from labels.
+  - Duplicate labels already stop in the loader (verified; that review item is closed).
+- **Decided** (Peter):
+  - Fix the seven review items and release as `cloak-v0.3.0`.
+  - Every sequence is kept (decision 007), `.` is a gap (008), and decision 003 is rewritten.
+  - Gate B runs locally on a copy of the users' data, and the release binary is portable.
+  - Tag `ddc9df1` as `cloak-v0.2.0` after gate B0.
+- **Records committed and `cloak` pushed:** DECISIONS 003, 004, 007, 008; PLAN; ANALYSIS sections
+  1, 3, 4, 5, 6, 7; two CLAUDE.md lines. The detailed plan is in `private/PLAN_v030.md`. The gate A binary
+  of `ddc9df1` is kept at `~/muscle-build/ref-ddc9df1/` (SHA-256 verified).
+- **Measured:** a read-only scan of the 23 expected outputs. 22 keep every row, and PF00353full_n1226_s5
+  loses 24 of 1,226. None has a column below its `-mincol`.
+- **Next.** The test infrastructure (PLAN phase 1, step 2). The users' reference data must be
+  copied to WSL for gate B0.
+
 ## 2026-10-30: public-repository scrub, gate A on ddc9df1
 
 - **History.** Peter rebuilt `cloak` on `f3559af` with the 0.2.0 code alone (`8ee5bdc`), then its

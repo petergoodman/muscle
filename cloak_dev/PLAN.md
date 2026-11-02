@@ -1,8 +1,9 @@
 # Plan: CLOAK in MUSCLE
 
-> **Status, 2026-10-30: phase 0 (setup) complete; phase 1 (hotfix cloak-v0.2.0): the code commit
-> `ddc9df1` passed gate A; the project files are scrubbed for the public fork and staged, not
-> committed; next is their commit, the push and gate B.** Peter owns this document.
+> **Status, 2026-11-01: phase 0 (setup) complete. Phase 1 is now the release `cloak-v0.3.0`: the
+> speed rewrite of `ddc9df1` (gate A passed 2026-10-30) plus the corrections the reviews of
+> 2026-10-30 and 2026-11-01 found, built test first. Step 1 (records, push) is done; next is the
+> test infrastructure (phase 1, step 2).** Peter owns this document.
 
 This is the project's living core document: what we are building and why, the constraints, the
 phases and their gates, open questions, where it stands, and the next step. It is read at the
@@ -14,71 +15,93 @@ validation data, cluster paths, correspondence) stay out of the public repositor
 ## Goal
 
 Make `muscle -cloak` usable on ensembles of up to a few thousand sequences, such as large Pfam
-families, then turn it into a documented, tested command that can be offered upstream. CLOAK
-stays a C++ command inside MUSCLE (decision 001).
+families, computing exactly the published algorithm (Mol Biol Evol 2026, doi
+10.1093/molbev/msag182, Methods and Fig. 6), then turn it into a documented, tested command that
+can be offered upstream. CLOAK stays a C++ command inside MUSCLE (decision 001).
 
 ## Constraints
 
 1. Code changes stay in `src/cloak.cpp` and its three one-line hooks; Edgar's code is not edited.
-2. `cloak-v0.2.x` output is byte-identical to `cloak-v0.1.0` (decision 003).
-3. Every output-changing behaviour change in 0.3.0 is approved by Peter, and by the users whose
-   results it changes, before it is implemented.
+2. Every release relates exactly to `cloak-v0.1.0` as decision 003 states, and is checked against
+   the published definition.
+3. Every output-changing behaviour change is approved by Peter, and by the users whose results it
+   changes, before it is implemented.
 4. Validation data owned by others are read only; validation writes only to Peter's directories.
-5. Expected outputs in `tests/data/` are never edited to make a test pass.
+5. Expected outputs in `tests/data/` are never edited to make a test pass. They are added or
+   replaced only by Peter, for a change of specification recorded in `DECISIONS.md`.
 
 ## Phases and gates
 
 **Phase 0, setup (done 2026-10-29).** Fork synced (`dev`, `cloak`, tag `cloak-v0.1.0` at
 `f3559af`), GitHub rulesets, frozen baseline binary, April 2025 smoke test identical.
 
-**Phase 1, hotfix cloak-v0.2.0.** Direct grouping replaces the recursion (decision 004).
-1. Peter reviews the diff and commits in two commits: `src/cloak.cpp`, then the project files.
-2. Gate A (laptop, Debian): `build.sh --full` from the clean commit; `test_quick.sh
-   --check-baseline` passes all cases; `test_random.sh 200` reports no difference.
-3. Push `cloak`. Gate B (cluster; procedure and data in the private notes): every existing
-   `cloak-v0.1.0` reference output is reproduced byte for byte, and every ensemble that
-   `cloak-v0.1.0` could not finish completes within 16 GB and 1 h.
-4. Tag `cloak-v0.2.0` on the gated commit, push the tag, and hand the release to its users with the
-   binary path, commit, SHA-256, gate tables and the known issues (`ANALYSIS.md`, section 5; row
-   dropping first).
+**Phase 1, release cloak-v0.3.0.** Direct grouping (decision 004, in `ddc9df1`), every sequence
+kept (007), `.` as a gap (008), every error exits 1 with no output, and output written with checked
+I/O, each built test first: the failing tests are recorded before the code changes them.
+1. Records for 0.3.0 committed; `cloak` pushed.
+2. Test infrastructure: a checker written from the definition, independent oracles (including
+   `cloak.py`'s own functions and a memoised build of `f3559af`), metamorphic relations, random
+   generators with asserted coverage, hand fixtures (installed by Peter), and one entry point,
+   `scripts/test.sh {edit|commit|release}`. Before any code change, the failing set on `ddc9df1`
+   and `f3559af` is recorded and must match the prediction.
+3. Gate B0 on `ddc9df1`, run locally on a read-only copy of the users' reference data (procedure
+   in the private notes): every existing `cloak-v0.1.0` reference output reproduced byte for
+   byte, and every ensemble that `cloak-v0.1.0` could not finish completed with non-empty output.
+   On a pass, tag `cloak-v0.2.0` on `ddc9df1` (not released to users).
+4. Code, one change per commit with its tests and records: rows and labels (007); errors and
+   checked output; `.` gaps (008).
+5. Quality pass: sanitizers, compiler warnings, mutation testing (every non-equivalent mutant
+   killed), performance against `ddc9df1`.
+6. Gate A: `build.sh --full` from a clean commit, then the portable build (no `-march=native`);
+   `scripts/gate_a.sh` (release tier) passes on the portable binary with no skips.
+7. Gate B1 on the portable binary, same data: every reference output meets decision 003's
+   relation, every output passes the checker with all sequences present, and the ensembles that
+   `cloak-v0.1.0` could not finish complete within 16 GB and 1 h (measured locally; anything above
+   the local 5 GB cap is measured once on a larger machine).
+8. Tag `cloak-v0.3.0` on the gated commit, push the tag, and hand the release to its users with
+   the portable binary, its SHA-256, the commit, the gate tables, the known issues, and a
+   one-minute smoke check (`scripts/smoke_check.sh`) to run once on their cluster.
 
-**Phase 2, specification and tests.** A short specification of what CLOAK computes and of every
-open question below, decided one by one; a slow checker written from the definition; tests for
-each decided behaviour; automated tests on GitHub if Peter wants them. Gate: Peter approves the
-specification, and the users whose outputs change approve those parts.
+**Phase 2, revisions (0.4.0).** The remaining open questions below, decided one by one, each with
+its test, against the definition. Gate: all tiers pass; gate B rerun with the expected differences
+only.
 
-**Phase 3, revisions (0.3.0).** One change per commit, each with its test, against the
-specification. Gate: all tests pass; gate B rerun with the expected differences only.
-
-**Phase 4, release and upstream.** Tag `cloak-v0.3.0` and offer upstream a new branch from its
+**Phase 3, release and upstream.** Tag the last revision and offer upstream a new branch from its
 chosen base (`main` or `dev`, decision 002) that carries only the `src/` diff, with new commit
 messages (decision 006).
 
-## Open questions (to decide in phase 2)
+## Open questions
 
-1. Rows left with at most one residue: keep them all (as `cloak.py` does), drop them (as now), or
-   an option.
-2. `.` gaps: support them or reject them with a clear message (0.2.0 already stops).
-3. Errors: report on stderr and exit nonzero for invalid options and unreadable input.
-4. No surviving column: empty output file or an error.
-5. Column order: keep the current order, or document it.
+1. Closed 2026-11-01: every sequence is kept (decision 007).
+2. Closed 2026-11-01: `.` is a gap (decision 008).
+3. Errors: 0.3.0 exits 1 with a message for invalid options, unreadable or empty input, allocation
+   failure while loading, no surviving column and failed writes. Still open: `-mincol` values that
+   MUSCLE's parser wraps (`ANALYSIS.md`, section 5, item 10).
+4. No surviving column: exit 1 in 0.3.0; an empty output file instead remains possible.
+5. Closed 2026-11-01: the column order is kept and documented (the paper does not specify it).
 6. An optional map from output columns back to MSA 0 columns.
 7. Usage text and README: default output name, `-mincol` meaning, `-efa_explode` syntax.
 8. The log line that prints `userMincol`.
+9. Memory: store classes sparsely if gate B shows the rows x output-columns term matters
+   (`ANALYSIS.md`, section 7).
 
 Questions for other people are kept in `private/PROJECT_NOTES.md`.
 
 ## Risks
 
-- `-march=native`: a binary built on one CPU type may fail on another; cluster binaries are built
-  on the cluster's compute nodes.
+- `-march=native`: a binary built on one CPU type may fail on another. The release binary is built
+  without it, and its users run the smoke check once before use.
 - The fixtures are subsampled Pfam ensembles, not production data; gate B covers that.
-- The WSL VM has 6 GB: the baseline can exhaust it on unfamiliar input (`CLAUDE.md`, "Memory").
+- The WSL VM has 6 GB: the baseline can exhaust it on unfamiliar input (`CLAUDE.md`, "Memory"), and
+  a large ensemble may exceed the local cap in gate B.
+- Peak memory has a rows x output-columns term (`ANALYSIS.md`, section 7).
+- The baseline and the candidate share MUSCLE's loader, so loader defects are invisible to
+  comparisons between them; the checker models the loader separately.
+- The Windows build (`muscle.vcxproj`) is not tested.
 
 ## Current state and next step
 
-`ddc9df1` holds the 0.2.0 code and passed gate A on 2026-10-30 (`CHANGELOG.md`, top entry). The
-project files are scrubbed for the public fork, pass `scripts/check_public.sh`, and are staged, not
-committed; `cloak` is not yet pushed. Next step: Peter commits the project files, reruns
-`check_public.sh`, and pushes `cloak` (permanent: force pushes are blocked), then gate B (phase 1,
-step 3).
+`ddc9df1` holds the speed rewrite and passed gate A on 2026-10-30; its binary is kept at
+`~/muscle-build/ref-ddc9df1/` for gate B0. The plan for 0.3.0 was approved on 2026-11-01, and its
+records are committed and pushed. Next step: the test infrastructure (phase 1, step 2); the users'
+reference data must be copied to WSL before gate B0 (step 3).

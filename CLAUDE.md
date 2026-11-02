@@ -31,8 +31,9 @@ Not read at the start: `cloak_dev/AI_DISCLOSURE.md` and older CHANGELOG entries.
 
 - **One working copy**, `C:\Users\peter\BioInformatics\muscle`, edited in VS Code and managed only
   with Windows git (`git.exe`). Edgar's `.gitattributes` (`* text=auto`) makes Windows check text
-  out with CRLF, so Linux git in WSL sees false changes here: never run Linux git in this folder.
-  Do not create a second working copy.
+  out with CRLF, so Linux git in WSL sees false changes here: never run Linux git `status`, `diff`
+  or any command that writes in this folder (`build.sh`'s read-only `rev-parse` and `clone` are
+  fine). Do not create a second working copy.
 - **Builds and runs happen in WSL2 Debian 12** (g++ 12.2, GNU Make 4.3, Python 3.11 at
   `/usr/bin/python3`), on the Linux filesystem, never in the working copy. `build.sh` keeps a
   Linux clone in `~/muscle-build/dev` for this (below); it is a build area, never edited.
@@ -99,8 +100,9 @@ bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test_random.sh 2
   edited.
 - Errors: `Die()` (message to stderr, exit 1). `Log()` writes only to the file given by `-log`.
 - Gaps are `-`. The `Ensemble` loader also treats `.` as a gap; CLOAK does not (ANALYSIS.md).
-- Versions are tags `cloak-vMAJOR.MINOR.PATCH` on `cloak`. `0.2.x` changes speed and memory only,
-  with output byte-identical to `cloak-v0.1.0` (decision 003).
+- Versions are tags `cloak-vMAJOR.MINOR.PATCH` on `cloak`. `cloak-v0.2.0` (`ddc9df1`) is the
+  speed rewrite, byte-identical to `cloak-v0.1.0`; `cloak-v0.3.0` computes the published
+  definition and relates to 0.1.0 exactly (decision 003).
 
 ## Gotchas
 

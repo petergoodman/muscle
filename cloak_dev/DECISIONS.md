@@ -30,27 +30,30 @@ identical output (verified 2026-10-28), so this is revisited when the change set
 upstream (phase 4).
 **Since** 2026-10-29.
 
-### 003. cloak-v0.2.x changes speed and memory only
+### 003. Releases and their exact relation to cloak-v0.1.0
 
-**Rule.** For every input that `cloak-v0.1.0` handles correctly, a `0.2.x` binary writes a
-byte-identical output file with the same exit status. Pass line: `cmp` against `cloak-v0.1.0`
-output. An input that `0.1.0` handles silently wrongly may instead stop with an error (the only
-such change in 0.2.0: rows whose residue counts differ between MSAs, which `.` gaps cause).
-**Why.** Existing `cloak-v0.1.0` outputs stay valid, and byte identity is a complete test.
-**Not chosen.** Bundling the other fixes into the hotfix; they change output and wait for 0.3.0.
-**Since** 2026-10-29.
+**Rule.** `cloak-v0.2.0` (`ddc9df1`, speed only) is byte-identical to `cloak-v0.1.0` wherever 0.1.0
+handles the input correctly. `cloak-v0.3.0` computes the published definition (007, 008) and relates
+to 0.1.0 exactly: for input with only `-` gaps and no label starting with `>`, its output minus the
+rows with at most one residue is 0.1.0's output byte for byte (0.1.0 exits 1 if no row remains); its
+output on input X equals its output on X with every `.` made `-`; where 0.1.0 exits 0 without output
+or crashes, it exits 1. Pass lines: a checker written from the definition, plus these relations.
+**Why.** Every 0.1.0 output stays explainable, and byte-level tests survive the intended changes.
+**Not chosen.** Byte identity for 0.3.0 (keeps the row bug, 007); comparing column multisets only.
+**Since** 2026-11-01 (first version 2026-10-29: 0.2.x changes speed and memory only).
 
 ### 004. Retained columns are found by direct grouping
 
 **Rule.** For each column of MSA 0, residues are grouped by the tuple of columns they occupy in MSAs
 1 to K-1; groups of at least `-mincol` residues are emitted in lexicographic tuple order, which is
 the order of `f3559af`'s output (`ANALYSIS.md`, section 4).
-**Why.** It computes the same columns in time and memory proportional to the input.
+**Why.** It computes the same columns in time about linear in the input. Peak memory also has a
+term proportional to rows times output columns (`ANALYSIS.md`, section 7).
 **Not chosen.** A per-column set of already expanded subsets, and an early exit from the
 recursion. Both remove the duplicates and should be byte-identical, but both keep the
 linear search for each residue's column in every MSA and the recursion's dense copies: the early
 exit took 134 s against 3.9 s for direct grouping on a synthetic 1,000 x 1,500 ensemble.
-**Since** 2026-10-29.
+**Since** 2026-10-29 (Why corrected 2026-11-01).
 
 ### 005. Python runs only in the conda environment `muscle-cloak`
 
@@ -72,3 +75,24 @@ only CLOAK's `src/` diff, with new commit messages; never `cloak` itself or its 
 2026-10-30).
 **Not chosen.** Removing Peter's own details from the fork now; tracking only code information.
 **Since** 2026-10-30.
+
+### 007. Every input sequence is in the output
+
+**Rule.** CLOAK writes every input sequence, under its label exactly as read, in label order, however
+many residues it keeps; a sequence that keeps none is an all-gap row. Only columns are filtered, and
+every output column holds at least `-mincol` residues.
+**Why.** The published algorithm removes columns, never sequences, and `cloak.py` keeps every row.
+Deleting rows after the column filter, as 0.1.0 does, also leaves columns with one residue or none
+(`ANALYSIS.md`, section 5, item 1).
+**Not chosen.** Deleting rows with at most one residue (0.1.0 and 0.2.0); an option to choose.
+**Since** 2026-11-01.
+
+### 008. Gaps are `-` and `.`
+
+**Rule.** CLOAK treats exactly `-` and `.` as gaps, as MUSCLE's `isgap` and its ensemble loader do;
+every other non-space character is a residue. Output gaps are written as `-`.
+**Why.** The loader accepts an ensemble only if its sequences agree with both characters removed, so
+numbering residues the same way makes residue p of a row the same residue in every alignment. Pfam
+Stockholm alignments use `.` (the fixture recipe's `sto2fa.py` removes it); MUSCLE writes only `-`.
+**Not chosen.** Numbering `.` as a residue (0.1.0, silently wrong); rejecting input that has `.`.
+**Since** 2026-11-01.
