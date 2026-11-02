@@ -4,14 +4,16 @@ cross-check the C++ byte for byte. It is not a CLOAK implementation for analyses
 Computes, for each column of MSA 0, the groups of residues that occupy one column in every MSA
 (key = column in MSAs 1..K-1), keeps groups of at least mincol residues in lexicographic key order,
 and writes FASTA as cloak-v0.3.0 does: every row (decision 007), rows sorted by label, input
-uppercased, '-' and '.' as gaps (decision 008), 60 characters per line. Input that CLOAK rejects,
-and a result with no column, exit 1 without writing OUT, as CLOAK does.
+uppercased, '-' and '.' as gaps (decision 008), 60 characters per line; OUT '-' is standard
+output. Input that CLOAK rejects, a result with no column, and a failed write exit 1 and leave no
+file at OUT, as CLOAK does.
 
 Usage: oracle_direct.py IN OUT [MINCOL]     (IN: EFA or path list; MINCOL as given to -mincol)
        oracle_direct.py -cloak IN -output OUT [-mincol M] [-threads T] [-log L]
 The second form is MUSCLE's command line (-threads and -log ignored), so that
 scripts/oracle_bin.sh can stand in for the binary when testing the test harness itself.
 """
+import os
 import sys
 
 from cloakio import GAPS, LoadError, load, parse_mincol, render, ungap
@@ -57,8 +59,20 @@ def main():
         data = cloak(*load(inp), parse_mincol(mc))
     except LoadError as e:
         sys.exit(f'oracle_direct: {e}')
-    with open(out, 'wb') as o:
-        o.write(data)
+    except MemoryError:
+        sys.exit('oracle_direct: out of memory')
+    try:
+        if out == '-':  # standard output, written unbuffered so no flush at exit can fail later
+            view = memoryview(data)
+            while view:
+                view = view[os.write(1, view):]
+        else:
+            with open(out, 'wb') as o:
+                o.write(data)
+    except OSError as e:
+        if out != '-' and os.path.isfile(out):  # a failed write leaves no output, as CLOAK does
+            os.remove(out)
+        sys.exit(f'oracle_direct: cannot write {out}: {e.strerror}')
 
 
 if __name__ == '__main__':

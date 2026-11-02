@@ -21,12 +21,14 @@ bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test.sh release 
 ```
 
 The binary defaults to `~/muscle-build/dev/bin/muscle`. Passing `scripts/oracle_bin.sh`, the byte
-oracle behind MUSCLE's command line, tests the harness itself: every tier must pass on it.
+oracle behind MUSCLE's command line, tests the harness itself: every tier must pass on it, except
+`test_oom.sh`, which `test.sh` reports as `n/a` there because a capped Python interpreter fails at
+startup with other exit statuses.
 
 | Tier | Parts |
 |---|---|
-| edit | `check_fixtures.sh`; `tools/test_spec_check.py`; `test_hand.sh`; 30 tiny random cases through every oracle and relation |
-| commit | edit; `test_quick.sh --check-baseline`; `run_suite.py` on 300 `gen_cases.py` and 100 `gen_synth.py` cases, coverage asserted |
+| edit | `check_fixtures.sh`; `tools/test_spec_check.py`; `test_hand.sh`; `test_errors.sh`; 30 tiny random cases through every oracle and relation |
+| commit | edit; `test_oom.sh`; `test_quick.sh --check-baseline`; `run_suite.py` on 300 `gen_cases.py` and 100 `gen_synth.py` cases, coverage asserted |
 | release | commit; `--check-baseline-slow`; 2,000 + 800 more random cases; and, still to build (the tier fails until they exist): sanitizer builds, compiler warnings, mutation testing, performance against `ddc9df1`, digit-plane tagging, the memoised `f3559af` build on the large fixtures |
 
 Gate B (`scripts/gate_b.sh`) runs a binary on the users' own ensembles and `cloak-v0.1.0`'s outputs
@@ -76,6 +78,20 @@ written by hand. O1, O2 and O3 all agree with every one (`tools/make_hand_fixtur
 tests/data/hand private/reference/cloak.py`). `scripts/test_hand.sh --predict v010|v020` checks that
 `f3559af` and `ddc9df1` fail exactly the predicted cases.
 
+## Error cases outside the MANIFEST
+
+`scripts/test_errors.sh` runs the cases a MANIFEST row cannot express, each with an exact exit
+status:
+- E20a, `-output /dev/full`: the error appears only at close.
+- E20b, `-output -` on a full standard output.
+- E20c, a 50 KiB file-size limit with `SIGXFSZ` ignored: no file may be left.
+- E21, `-cloak ''`.
+- H17, `-output -`: the expected bytes on standard output.
+
+`scripts/test_oom.sh` (E16) runs PF00353full_n1226_s5 under 15 address-space caps, from 16 MiB to
+2 GiB in steps of √2. Each run must either exit 1 with the output path untouched or exit 0 with
+the expected bytes, and both kinds must occur. No cap is tuned to a binary.
+
 ## Measured (2026-11-02, laptop, WSL Debian 12)
 
 | Run | Result |
@@ -84,6 +100,9 @@ tests/data/hand private/reference/cloak.py`). `scripts/test_hand.sh --predict v0
 | harness on `oracle_bin.sh` (positive control) | hand 42 of 42; `run_suite.py --count 60 --synth 50 --relations 3` with baseline and `cloak.py`: 800 comparisons, 680 against `f3559af`, 289 against `cloak.py`, 1,513 relation checks, 0 failed, 0 skipped, 141 s |
 | red step, hand cases | `ddc9df1` and `f3559af` each fail 16 of 42, exactly as predicted |
 | red step, random cases (same run) | `ddc9df1` fails 388 of 800 comparisons, `f3559af` 413; every failure is a case with a sequence keeping at most one residue, a `.` in the input, or a relation that inserts `.` or raises `-mincol` |
+| red step for the errors commit, on `20798ce` | `test_errors.sh`: E20a, E20b, E20c and E21 exit 0 (E20c leaves 51,200 bytes), H17 passes; `test_oom.sh`: caps of 16 to 45 MiB exit 0 with no output, 64 and 90 MiB exit 134, 128 MiB and above pass |
+| errors commit, `test.sh commit` | hand 37 of 42 (the 5 `.` cases fail); errors 5 of 5; oom 15 of 15 (6 exit 1, 9 exit 0; 5 s); quick 23 of 23; tiny and random fail the same 20 and 143 comparisons as `20798ce`, all `.` cases or relation R3 |
+| positive control, errors commit | `test.sh commit` on `oracle_bin.sh`: every part passes (errors 5 of 5), oom reported `n/a` |
 
 The last row means that, wherever the known defects cannot act, both old binaries agree with the
 definition, the byte oracle, `cloak.py` and every relation.

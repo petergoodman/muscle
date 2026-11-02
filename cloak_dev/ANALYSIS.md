@@ -136,10 +136,13 @@ holds for both `f3559af` and `ddc9df1` unless stated.
    (0.3.0, decision 008)
 3. **Errors that exit 0 or crash.** A `-mincol` below 2 is reported only through `Log()`, which
    writes nothing unless `-log` is given, and `cmd_cloak` returns normally: exit 0, no output file.
-   An allocation failure while loading is caught by the `catch (...)` around `E.FromFile`: exit 0,
-   no output, no message (after loading it is uncaught, exit 134). A path list that names no MSA
-   segfaults (exit 139). A missing input path and `-cloak` without a value already exit 1.
-   (0.3.0)
+   An empty value (`-cloak ''`) does the same. An allocation failure while loading is caught by
+   the `catch (...)` around `E.FromFile`: exit 0, no output, no message; after loading it is
+   uncaught, exit 134. On PF00353full_n1226_s5 under `ulimit -v`, caps of 16 to 45 MiB give exit 0
+   with no output and 64 and 90 MiB give exit 134 (`scripts/test_oom.sh` on `20798ce`,
+   2026-11-02). A path list that names no MSA segfaults (exit 139). A missing input path and
+   `-cloak` without a value already exit 1. (0.3.0: each exits 1 with a message, and an allocation
+   failure anywhere is caught)
 4. **Nothing survives.** A result with no column left stops with `Empty FASTA` (exit 1) rather than
    writing an empty file. Once every row is kept, an empty result would instead reach
    `MSA::ToFASTAFile` with no columns, where `(0 - 1)/60 + 1` wraps and the loop writes out of
@@ -153,8 +156,12 @@ holds for both `f3559af` and `ddc9df1` unless stated.
 8. **Writes are not checked.** The output goes through MUSCLE's `TextFile`, whose `PutChar` and
    `PutString` check `fputc` and `fputs` only with `assert` (removed by `-DNDEBUG`) and whose
    `Close` ignores `fclose`'s result (`textfile.cpp`, `textfile.h`). A full disk or quota therefore
-   leaves a truncated file with exit 0. (0.3.0 writes with MUSCLE's checked `CreateStdioFile`,
-   `WriteStdioFile` and `CloseStdioFile`, which `Die` on failure)
+   leaves a truncated file with exit 0: under a 50 KiB file-size limit with `SIGXFSZ` ignored,
+   `20798ce` exits 0 and leaves 51,200 bytes, and `-output /dev/full` exits 0
+   (`scripts/test_errors.sh`, 2026-11-02). (0.3.0 writes the file itself, checks every write and
+   the close or flush, and on failure removes a partial regular file and exits 1. MUSCLE's checked
+   `WriteStdioFile` and `CloseStdioFile` `Die` without removing the partial file, and
+   `CreateStdioFile` would create a file named `-`, which `TextFile` writes to standard output.)
 9. **Labels lose a leading `>`.** `cmd_cloak` strips a leading `>` from every label, although the
    loader's labels never include the FASTA `>`, so an input label `>x` (line `>>x`) is written as
    `x`. (0.3.0, decision 007)

@@ -66,6 +66,8 @@ bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test.sh release 
 bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test_quick.sh       # 23 fixtures
 bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test_hand.sh        # 42 hand cases
 bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test_random.sh 200  # 800 random comparisons
+bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test_errors.sh      # failed writes, stdout
+bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test_oom.sh         # memory caps, ~6 s
 # binary: ~/muscle-build/dev/bin/muscle; BUILD_INFO.txt beside bin/ records commit and src state
 # test design, oracles, tiers and measurements: cloak_dev/tests/README.md
 ```
@@ -124,8 +126,10 @@ bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test_random.sh 2
 - Edgar's `cloak.cpp` starts with a UTF-8 byte-order mark; keep it.
 - `-efa_explode` takes `-prefix` and `-suffix`, not `-output`.
 - `muscle -cloak` accepts an EFA or a text file of MSA paths (CRLF line endings are fine).
-- An invalid `-mincol` exits 0 with no output and no message unless `-log` is given (until the
-  errors commit of 0.3.0); a result with no surviving column stops with exit 1 and no output.
+- From the errors commit of 0.3.0, every error (an invalid `-mincol`, no surviving column, a failed
+  write, running out of memory) exits 1 with a message on stderr and leaves no output file; before
+  it, an invalid `-mincol` exits 0 with no output and no message unless `-log` is given.
+  `-output -` writes to standard output.
 
 ## Git
 

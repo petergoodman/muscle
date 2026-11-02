@@ -27,7 +27,9 @@
  *    - Columns not meeting the minimum occupancy threshold will be discarded. -mincol 2, the
  *      default, is the published algorithm; higher values are an extension.
  *    - Every input sequence is written, in label order, even if it keeps no residue.
- *    - If no column survives, CLOAK stops with an error and writes no output.
+ *    - Every error, including no surviving column, a failed write and running out of memory,
+ *      exits 1 with a message on stderr and leaves no output file.
+ *    - -output - writes the result to standard output.
  *    - Input ensemble must either be EFA file or text file with paths to individual MSAs
  *
  * Example:
@@ -47,6 +49,10 @@
 #include <cctype>
 #include <cassert>
 #include <fstream>
+#include <cerrno>
+#include <cstring>
+#include <new>
+#include <sys/stat.h>
 
 
 //Converts the users input MSA ensemble into a 3-D array
@@ -389,16 +395,43 @@ std::vector<std::vector<char>> produce_output_in_letters(
 }
 
 
-void cmd_cloak()
+// Writes the FASTA bytes of MSA::ToFASTAFile (">label", then lines of 60 characters, LF) with every
+// write checked: MUSCLE's TextFile checks writes only with assert, so a full disk exited 0 with a
+// truncated file. "-" is standard output, as for TextFile. A partial regular file is removed before
+// Die, so a failed write leaves no output file.
+static void write_fasta(const std::string& path, const std::vector<std::string>& labels,
+    const std::vector<std::string>& seqs)
+{
+    const bool toStdout = (path == "-");
+    FILE* f = toStdout ? stdout : fopen(path.c_str(), "wb");
+    if (f == 0)
+        Die("cloak: cannot create %s, errno=%d %s", path.c_str(), errno, strerror(errno));
+    bool ok = true;
+    for (size_t r = 0; ok && r < labels.size(); ++r) {
+        ok = fprintf(f, ">%s\n", labels[r].c_str()) >= 0;
+        const std::string& s = seqs[r];
+        for (size_t i = 0; ok && i < s.size(); i += 60) {
+            const size_t len = std::min<size_t>(60, s.size() - i);
+            ok = fwrite(s.data() + i, 1, len, f) == len && fputc('\n', f) != EOF;
+        }
+    }
+    ok = (toStdout ? fflush(f) == 0 : fclose(f) == 0) && ok;
+    if (!ok) {
+        struct stat st;
+        if (!toStdout && stat(path.c_str(), &st) == 0 && (st.st_mode & S_IFMT) == S_IFREG)
+            remove(path.c_str());
+        Die("cloak: cannot write %s, errno=%d %s", path.c_str(), errno, strerror(errno));
+    }
+}
+
+
+static void run_cloak()
 
 {
     // Parse user options
     std::string ensemblePath = opt(cloak);  // user runs: muscle -cloak myfile ...
     if (ensemblePath.empty())
-    {
-        Log("Error: you must specify -cloak <ensembleFile or list-of-FASTA>\n");
-        return;
-    }
+        Die("cloak: you must specify -cloak <ensembleFile or list-of-FASTA>");
 
     std::string outputFilename = opt(output);
     if (outputFilename.empty())
@@ -414,25 +447,16 @@ void cmd_cloak()
         minimumColumns = userMincol;
     }
     if (minimumColumns < 2)
-    {
-        Log("Error: -mincol must be >= 2\n");
-        return;
-    }
+        Die("cloak: -mincol must be >= 2");
 
     Log("Starting cloak. Ensemble path: %s, Output filename: %s, Minimum columns requested: %u\n",
         ensemblePath.c_str(), outputFilename.c_str(), userMincol);
 
     // Load the entire ensemble from the user-supplied file
     Ensemble E;
-    try
-    {
-        E.FromFile(ensemblePath);
-    }
-    catch (...)
-    {
-        Log("Error: Unable to parse ensemble from file %s\n", ensemblePath.c_str());
-        return;
-    }
+    E.FromFile(ensemblePath);
+    if (E.GetMSACount() == 0)   // a path list naming no MSA loads with only a warning
+        Die("cloak: the ensemble %s holds no MSA", ensemblePath.c_str());
 
     // Convert the ensemble into a 3D array of chars
     // plus keep a parallel 2D array of labels for each MSA.
@@ -476,12 +500,27 @@ void cmd_cloak()
     for (const auto& row : letters_array_output)
         finalSeqs.emplace_back(row.begin(), row.end());
 
-    Log("Building final MSA with %u sequences.\n", (unsigned)finalSeqs.size());
-
-    MSA mCloaked;
-    mCloaked.FromStrings2(firstLabels, finalSeqs);
-
-    mCloaked.ToFASTAFile(outputFilename);
+    Log("Writing %u sequences.\n", (unsigned)finalSeqs.size());
+    write_fasta(outputFilename, firstLabels, finalSeqs);
 
     Log("Cloak: Output written to %s\n", outputFilename.c_str());
+}
+
+
+void cmd_cloak()
+{
+    // Allocation failures exit 1 like every other error; uncaught, std::bad_alloc aborted (exit 134).
+    // Unwinding frees run_cloak's memory before Die runs.
+    try
+    {
+        run_cloak();
+    }
+    catch (const std::bad_alloc&)
+    {
+        Die("cloak: out of memory");
+    }
+    catch (...)
+    {
+        Die("cloak: unexpected exception");
+    }
 }

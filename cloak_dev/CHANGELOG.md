@@ -4,6 +4,31 @@ Session history for the CLOAK work on the fork `petergoodman/muscle`, newest fir
 about ten lines: what was done, what failed and why, what is next. An entry that closes a gate
 also holds its gate record. The next session starts from the top entry.
 
+## 2026-11-02: errors and checked output (C2)
+
+- **Decided** (Peter, approving the C2 plan):
+  - CLOAK writes its FASTA itself, because Edgar's stdio helpers leave a partial file and treat
+    `-` as a file name. A failed write removes a partial regular file.
+  - An allocation failure anywhere exits 1.
+  - `test_oom.sh` is not run on the byte oracle.
+- **Code**, in `src/cloak.cpp`:
+  - `Die` for an empty `-cloak` value, for `-mincol` below 2, and for a path list naming no MSA.
+  - `write_fasta` checks every write and the close; `-output -` still writes to stdout.
+  - `cmd_cloak` turns `std::bad_alloc` into exit 1.
+- **Tests:** `scripts/test_errors.sh` (E20a to E20c, E21, H17; edit tier) and `scripts/test_oom.sh`
+  (E16; commit tier). `oracle_direct.py` now handles failed writes and stdout the same way.
+- **Red step** on `20798ce` (`fed24aa7...`), as predicted:
+  - E01 exits 0, E04 exits 139.
+  - E20a to E20c and E21 exit 0; E20c leaves 51,200 bytes.
+  - Memory caps of 16 to 45 MiB exit 0 with no output; 64 and 90 MiB exit 134.
+- **Green:**
+  - hand 37 of 42; errors 5 of 5; oom 15 of 15; quick 23 of 23;
+  - tiny and random fail the same 20 and 143 comparisons as `20798ce`, all of them `.` cases;
+  - the positive control passes.
+- **Failed:** I edited `test.sh` while a run was executing it, and bash hit a syntax error after
+  the run's last part. The results of the parts that had finished were kept and used.
+- **Next:** C3 (`.` gaps), then the quality pass.
+
 ## 2026-11-02: test infrastructure, gate B0 on ddc9df1
 
 - **Decided** (Peter). Agents may add test data but never change it (decision 009, guarded by

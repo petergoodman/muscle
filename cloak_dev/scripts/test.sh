@@ -3,10 +3,11 @@
 #
 # Usage (Debian terminal, conda env muscle-cloak):
 #   bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test.sh {edit|commit|release} [BINARY]
-#     edit     after every build, about 1 min: fixture check, checker unit tests, hand cases, and
-#              30 tiny random cases through every oracle and relation
-#     commit   before every commit, about 5 min: edit, plus test_quick.sh --check-baseline and
-#              300 gen_cases + 100 gen_synth cases with coverage asserted
+#     edit     after every build, about 1 min: fixture check, checker unit tests, hand cases,
+#              test_errors.sh, and 30 tiny random cases through every oracle and relation
+#     commit   before every commit, about 5 min: edit, plus test_oom.sh (not on the byte oracle),
+#              test_quick.sh --check-baseline and 300 gen_cases + 100 gen_synth cases with
+#              coverage asserted
 #     release  gate A, hours: commit, plus --check-baseline-slow, 2,000 + 800 more random cases,
 #              and the parts not yet built, which fail the tier until they exist
 #   BINARY     default ~/muscle-build/dev/bin/muscle; scripts/oracle_bin.sh tests the harness itself
@@ -43,8 +44,14 @@ echo "tier $TIER; binary $BIN ($(sha256sum "$BIN" | cut -c1-12)); outputs $OUT"
 part fixtures bash "$HERE/check_fixtures.sh"
 part checker "$PY" "$TOOLS/test_spec_check.py"
 part hand bash "$HERE/test_hand.sh" "$BIN"
+part errors bash "$HERE/test_errors.sh" "$BIN"
 part tiny "$PY" "$TOOLS/run_suite.py" "$BIN" "$OUT/tiny" --schedules tiny --count 30 --relations 1 "${ref[@]}"
 if [ "$TIER" != edit ]; then
+  if [ "$(readlink -f "$BIN")" = "$(readlink -f "$HERE/oracle_bin.sh")" ]; then
+    echo "n/a   oom           the byte oracle has no memory behaviour of its own (test_oom.sh)"
+  else
+    part oom bash "$HERE/test_oom.sh" "$BIN"
+  fi
   part quick bash "$HERE/test_quick.sh" --check-baseline "$BIN"
   part random "$PY" "$TOOLS/run_suite.py" "$BIN" "$OUT/random" --count 60 --synth 50 --relations 3 \
     --baseline "$BASE" "${ref[@]}" --assert-coverage
