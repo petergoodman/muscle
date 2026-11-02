@@ -105,5 +105,5 @@ Questions for other people are kept in `private/PROJECT_NOTES.md`.
 
 `ddc9df1` holds the speed rewrite, passed gate A on 2026-10-30 and gate B0 on 2026-11-02; its binary
 is kept at `~/muscle-build/ref-ddc9df1/`, and Peter tags it `cloak-v0.2.0`. The test infrastructure
-is committed (`tests/README.md`), with the red step recorded in `CHANGELOG.md`. Next step: the rows
-commit (step 4), then errors and checked output, then `.` gaps.
+is committed (`tests/README.md`), with the red step recorded in `CHANGELOG.md`, and so is the rows
+change (step 4, first of three). Next step: errors and checked output, then `.` gaps.

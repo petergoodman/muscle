@@ -24,7 +24,10 @@
  *
  * Notes:
  *    - This tool is intended to be used as a plug-in with the MUSCLE suite.
- *    - Columns not meeting the minimum occupancy threshold will be discarded.
+ *    - Columns not meeting the minimum occupancy threshold will be discarded. -mincol 2, the
+ *      default, is the published algorithm; higher values are an extension.
+ *    - Every input sequence is written, in label order, even if it keeps no residue.
+ *    - If no column survives, CLOAK stops with an error and writes no output.
  *    - Input ensemble must either be EFA file or text file with paths to individual MSAs
  *
  * Example:
@@ -200,8 +203,8 @@ convert_to_nums(const std::vector<std::vector<std::vector<char>>>& array)
 // lexicographic key order, which is the order in which the recursive search used up to f3559af
 // first reached them, so the output file is unchanged; that search reached each group many times
 // over and stored every copy, which exhausted memory on ensembles whose alignments disagree.
-// Groups with fewer than minimumColumns residues are dropped here rather than after conversion
-// to letters.
+// Groups with fewer than minimumColumns residues are dropped here, so remove_singletons, which
+// filters again after conversion to letters, removes nothing.
 std::vector<std::vector<NumOrDash>> create_output(
     const std::vector<std::vector<std::vector<NumOrDash>>>& all_als,
     uint minimumColumns)
@@ -449,11 +452,13 @@ void cmd_cloak()
     // 2) Create numeric output (each retained column once, so no duplicate removal is needed)
     Log("Creating initial numeric output.\n");
     auto nums_array_output = create_output(nums_answer, minimumColumns);
+    if (nums_array_output.empty())
+        Die("cloak: no column has %u or more residues", minimumColumns);
 
-    // 4) Use the first alignment in three_d_array_letters as reference.
+    // 3) Use the first alignment in three_d_array_letters as reference.
     auto reference_alignment = three_d_array_letters[0];
 
-    // 5) Convert numeric output back to letters
+    // 4) Convert numeric output back to letters
     Log("Converting numeric output back to letters.\n");
     auto transposed_reference = transpose_output(reference_alignment);
     auto letters_array_output_initial =
@@ -464,48 +469,17 @@ void cmd_cloak()
 
     letters_array_output = transpose_output(letters_array_output);
 
-    // Build final MSA with original labels from the original MSAs
-
-    // allLabels[0] = the labels (in alphabetical order) for the first MSA
+    // 5) Every input sequence is written, under its label exactly as read and in label order,
+    // however many residues it keeps (decision 007). allLabels[0] is in that order.
     const auto& firstLabels = allLabels[0];
-
-    // Build finalLabels/finalSeqs in parallel
-    std::vector<std::string> finalLabels;
     std::vector<std::string> finalSeqs;
-
-    for (size_t i = 0; i < letters_array_output.size(); i++)
-    {
-        // Convert the row to a string
-        std::string rowStr(letters_array_output[i].begin(),
-            letters_array_output[i].end());
-        // Count non-dash letters
-        int letterCount = 0;
-        for (char c : rowStr)
-            if (c != '-') letterCount++;
-        // If this row is NOT a singleton, we keep it
-        if (letterCount > 1)
-        {
-            // The label for row i is firstLabels[i]
-            if (i < firstLabels.size())
-                finalLabels.push_back(firstLabels[i]);
-            else
-                finalLabels.push_back(std::string(">Seq") + std::to_string(i + 1));
-
-            finalSeqs.push_back(rowStr);
-        }
-    }
+    for (const auto& row : letters_array_output)
+        finalSeqs.emplace_back(row.begin(), row.end());
 
     Log("Building final MSA with %u sequences.\n", (unsigned)finalSeqs.size());
 
-    // Create a new MSA from these labels & sequences
     MSA mCloaked;
-    // We must strip the '>' from labels, because MSA::FromStrings2 expects them *without* a '>' prefix.
-    for (auto& lab : finalLabels)
-    {
-        if (!lab.empty() && lab[0] == '>')
-            lab.erase(0, 1);
-    }
-    mCloaked.FromStrings2(finalLabels, finalSeqs);
+    mCloaked.FromStrings2(firstLabels, finalSeqs);
 
     mCloaked.ToFASTAFile(outputFilename);
 

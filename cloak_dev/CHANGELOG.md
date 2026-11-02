@@ -30,10 +30,17 @@ also holds its gate record. The next session starts from the top entry.
   private notes.
 - **Found.** An MSA with fewer rows than MSA 0 crashes MUSCLE's loader (`ANALYSIS.md`, section 5,
   item 12).
+- **Rows commit (C1)**, in `src/cloak.cpp`:
+  - Every sequence is written, under its exact label.
+  - `Die` before output when no column survives.
+  - With Peter's approval, the PF00353full_n1226_s5 MANIFEST row now points at its 0.3.0 expected
+    output, which the C1 build reproduces byte for byte.
+  - Results: `test_quick.sh` 23 of 23. Hand cases 35 of 42; the 7 still failing are the `.` cases
+    and E01 and E04. The tiny random cases now fail only relation R3 (inserted `.`).
 - **Next.**
   - Peter tags `cloak-v0.2.0` on `ddc9df1`.
-  - The rows commit (C1, drafted in `src/cloak.cpp`, not yet built). It needs Peter's approval to
-    point the PF00353full_n1226_s5 MANIFEST row at the 0.3.0 expected output.
+  - The errors and checked-output commit (C2), then `.` gaps (C3), following the detailed plan in
+    `private/PLAN_v030.md`.
 
 ## 2026-11-01: reviews, third audit, plan for cloak-v0.3.0
 

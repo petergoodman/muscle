@@ -20,6 +20,14 @@ routinely.
 | `f3559af` | written by a build of upstream `f3559af` (cloak-v0.1.0) |
 | `april2025` | written by Peter's April 2025 Windows build (same `cloak.cpp`), and reproduced byte for byte by `f3559af` builds in the Cowork sandbox and on Peter's laptop on 2026-10-29 |
 | `independent` | `f3559af` cannot finish (memory). Written by the cloak-v0.2.0 candidate and byte-identical to two independent implementations: an early-exit variant of the `f3559af` recursion and `cloak_dev/tools/oracle_direct.py` |
+| `v030` | the cloak-v0.3.0 output, where it differs from 0.1.0's (decision 007); see below |
+
+`expected/PF00353full_n1226_s5.m2.v030.fa` (2026-11-02) is the cloak-v0.3.0 output, with all 1,226
+rows, written by `tools/oracle_direct.py` before the code change and then reproduced by the C1
+build. Removing its rows with at most one residue gives `expected/PF00353full_n1226_s5.m2.fa` (the
+cloak-v0.1.0 and 0.2.0 output, kept) byte for byte, and `tools/spec_check.py check --order` accepts
+it. Its MANIFEST row was changed with Peter's approval (decision 009). Every other case keeps every
+row, so its 0.1.0 output is also its 0.3.0 output.
 
 | baseline | meaning |
 |---|---|

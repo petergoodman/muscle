@@ -21,4 +21,4 @@ PF00188_n60.efa	2	expected/PF00188_n60.m2.fa	f3559af	slow
 PF00188_n92.efa	2	expected/PF00188_n92.m2.fa	independent	never
 PF00188_n92_s5.efa	2	expected/PF00188_n92_s5.m2.fa	independent	never
 PF00188full_n203_s5.efa	2	expected/PF00188full_n203_s5.m2.fa	independent	never
-PF00353full_n1226_s5.efa	2	expected/PF00353full_n1226_s5.m2.fa	independent	never
+PF00353full_n1226_s5.efa	2	expected/PF00353full_n1226_s5.m2.v030.fa	v030	never

@@ -124,8 +124,8 @@ bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test_random.sh 2
 - Edgar's `cloak.cpp` starts with a UTF-8 byte-order mark; keep it.
 - `-efa_explode` takes `-prefix` and `-suffix`, not `-output`.
 - `muscle -cloak` accepts an EFA or a text file of MSA paths (CRLF line endings are fine).
-- An invalid `-mincol` exits 0 with no output and no message unless `-log` is given; a result with
-  no surviving column stops with `Empty FASTA` (exit 1).
+- An invalid `-mincol` exits 0 with no output and no message unless `-log` is given (until the
+  errors commit of 0.3.0); a result with no surviving column stops with exit 1 and no output.
 
 ## Git
 
