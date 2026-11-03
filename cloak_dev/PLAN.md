@@ -3,8 +3,8 @@
 > **Status, 2026-11-02: phase 0 (setup) complete. Phase 1 is now the release `cloak-v0.3.0`: the
 > speed rewrite of `ddc9df1` (gate A passed 2026-10-30) plus the corrections the reviews of
 > 2026-10-30 and 2026-11-01 found, built test first. Steps 1 to 3 are done (records, test
-> infrastructure, gate B0 passed on 2026-11-02); step 4 has two of its three commits (rows, errors
-> and checked output), and next is `.` gaps.** Peter owns this document.
+> infrastructure, gate B0 passed on 2026-11-02) and so is step 4 (rows, errors and checked output,
+> `.` gaps); next is step 5, the quality pass.** Peter owns this document.
 
 This is the project's living core document: what we are building and why, the constraints, the
 phases and their gates, open questions, where it stands, and the next step. It is read at the
@@ -105,5 +105,6 @@ Questions for other people are kept in `private/PROJECT_NOTES.md`.
 
 `ddc9df1` holds the speed rewrite, passed gate A on 2026-10-30 and gate B0 on 2026-11-02; its binary
 is kept at `~/muscle-build/ref-ddc9df1/`, and Peter tags it `cloak-v0.2.0`. The test infrastructure
-is committed (`tests/README.md`), with the red step recorded in `CHANGELOG.md`, and so are the rows
-change and the errors and checked-output change (step 4, two of three). Next step: `.` gaps.
+is committed (`tests/README.md`), with the red step recorded in `CHANGELOG.md`, and so is step 4
+(rows, errors and checked output, `.` gaps): the edit and commit tiers pass with no failure. Next
+step: the quality pass (step 5).

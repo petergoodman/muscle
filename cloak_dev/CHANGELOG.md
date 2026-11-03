@@ -4,6 +4,17 @@ Session history for the CLOAK work on the fork `petergoodman/muscle`, newest fir
 about ten lines: what was done, what failed and why, what is next. An entry that closes a gate
 also holds its gate record. The next session starts from the top entry.
 
+## 2026-11-02: `.` gaps (C3)
+
+- **Code** (`src/cloak.cpp`, decision 008):
+  - `convert_to_nums` and `produce_output_in_letters` use MUSCLE's `isgap`, so `.` is a gap.
+  - The residue-count `Die` is an `asserta`, since the loader guarantees equal counts.
+  - Comments and a header note are updated.
+- **Red step:** the C2 failing set (5 hand cases, 20 tiny and 143 random comparisons, all `.`).
+- **Green:** `test.sh commit` passes with no failure: hand 42 of 42; random 800 comparisons (680
+  against `f3559af`, 289 against `cloak.py`) and 1,513 relation checks, 0 failed, 0 skipped.
+- **Next:** the quality pass (PLAN.md, step 5).
+
 ## 2026-11-02: errors and checked output (C2)
 
 - **Decided** (Peter, approving the C2 plan):

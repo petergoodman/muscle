@@ -112,7 +112,8 @@ bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test_oom.sh     
 - Code changes stay inside `src/cloak.cpp` and its three one-line hooks. Edgar's code is not
   edited.
 - Errors: `Die()` (message to stderr, exit 1). `Log()` writes only to the file given by `-log`.
-- Gaps are `-`. The `Ensemble` loader also treats `.` as a gap; CLOAK does not (ANALYSIS.md).
+- Gaps are `-` and `.`, as in the `Ensemble` loader (decision 008, from the `.` commit of 0.3.0;
+  earlier CLOAK numbered `.` as a residue, ANALYSIS.md); output gaps are `-`.
 - Versions are tags `cloak-vMAJOR.MINOR.PATCH` on `cloak`. `cloak-v0.2.0` (`ddc9df1`) is the
   speed rewrite, byte-identical to `cloak-v0.1.0`; `cloak-v0.3.0` computes the published
   definition and relates to 0.1.0 exactly (decision 003).

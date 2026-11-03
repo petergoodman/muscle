@@ -133,7 +133,8 @@ holds for both `f3559af` and `ddc9df1` unless stated.
    only when a row's residue count differs between MSAs: with equal counts it prints `.` as a
    residue as `f3559af` does, and it stops on cases that `f3559af` gets right (in the 2026-10-30
    audit, 242 of 1,926 unequal-count comparisons). MUSCLE writes only `-`.
-   (0.3.0, decision 008)
+   (0.3.0, decision 008: residues are numbered with MUSCLE's `isgap`, and the residue-count check
+   is an `asserta`, since the loader guarantees equal counts)
 3. **Errors that exit 0 or crash.** A `-mincol` below 2 is reported only through `Log()`, which
    writes nothing unless `-log` is given, and `cmd_cloak` returns normally: exit 0, no output file.
    An empty value (`-cloak ''`) does the same. An allocation failure while loading is caught by

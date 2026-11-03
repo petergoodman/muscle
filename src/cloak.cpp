@@ -27,6 +27,7 @@
  *    - Columns not meeting the minimum occupancy threshold will be discarded. -mincol 2, the
  *      default, is the published algorithm; higher values are an extension.
  *    - Every input sequence is written, in label order, even if it keeps no residue.
+ *    - Gaps are '-' and '.', as in MUSCLE's loader; output gaps are '-'.
  *    - Every error, including no surviving column, a failed write and running out of memory,
  *      exits 1 with a message on stderr and leaves no output file.
  *    - -output - writes the result to standard output.
@@ -162,7 +163,7 @@ struct NumOrDash {
 
 //   For each alignment (a 2-D vector of characters) in the 3-D array,
 //   and for each sequence (row) in that alignment, assign a running count
-//   (starting at 1) to each non-dash character, leaving dashes unchanged.
+//   (starting at 1) to each residue; every gap ('-' or '.', MUSCLE's isgap) becomes '-'.
 //   The result is returned as a 3-D vector, where each element is a NumOrDash.
 std::vector<std::vector<std::vector<NumOrDash>>>
 convert_to_nums(const std::vector<std::vector<std::vector<char>>>& array)
@@ -183,7 +184,7 @@ convert_to_nums(const std::vector<std::vector<std::vector<char>>>& array)
             // Process each character in the sequence.
             for (size_t z = 0; z < row.size(); ++z) {
                 char letter = row[z];
-                if (letter == '-') {
+                if (isgap(letter)) {
                     // Calls the NumOrDash(char) constructor
                     row_array.push_back(NumOrDash('-'));
                 }
@@ -236,10 +237,8 @@ std::vector<std::vector<NumOrDash>> create_output(
             for (size_t c = 0; c < row.size(); ++c)
                 if (row[c].type == NumOrDashType::INTEGER)
                     pos_col[k][r].push_back(static_cast<int>(c));
-            // Equal counts are guaranteed when gaps are '-'; '.' is numbered as a residue here.
-            if (pos_col[k][r].size() != residues0[r])
-                Die("cloak: row %u has %u residues in MSA %u but %u in MSA 0; gaps must be '-'",
-                    (uint) r, (uint) pos_col[k][r].size(), (uint) k, (uint) residues0[r]);
+            // The loader accepts only MSAs whose ungapped sequences agree, so counts are equal.
+            asserta(pos_col[k][r].size() == residues0[r]);
         }
     }
 
@@ -297,8 +296,8 @@ std::vector<std::vector<typename Container::value_type>> transpose_output(const 
 }
 
 
-// This function takes a vector of sequences (strings) and returns a new vector 
-// containing only those sequences that have more than one non-dash character.
+// Takes the output columns (each a vector over rows, gaps '-') and returns only those with at
+// least minColumns residues.
 std::vector<std::vector<char>> remove_singletons(
     const std::vector<std::vector<char>>& two_d_array,
     uint minColumns)
@@ -334,8 +333,8 @@ std::vector<std::vector<char>> produce_output_in_letters(
         return return_array;
     }
 
-    // Build an "intermediary" 2D array that collects the non-dash
-    // characters column by column from first_alignment.
+    // Build an "intermediary" 2D array that collects the residues (non-gap
+    // characters) column by column from first_alignment.
     size_t num_cols = first_alignment[0].size();
     for (size_t i = 0; i < num_cols; i++) {
         std::string s;
@@ -345,10 +344,10 @@ std::vector<std::vector<char>> produce_output_in_letters(
                 s.push_back(row[i]);
             }
         }
-        // Build an array of characters from s, skipping dashes.
+        // Build an array of characters from s, skipping gaps.
         std::vector<char> some_array;
         for (char ch : s) {
-            if (ch == '-') {
+            if (isgap(ch)) {
                 continue;
             }
             some_array.push_back(ch);

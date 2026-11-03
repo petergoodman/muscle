@@ -102,6 +102,7 @@ the expected bytes, and both kinds must occur. No cap is tuned to a binary.
 | red step, random cases (same run) | `ddc9df1` fails 388 of 800 comparisons, `f3559af` 413; every failure is a case with a sequence keeping at most one residue, a `.` in the input, or a relation that inserts `.` or raises `-mincol` |
 | red step for the errors commit, on `20798ce` | `test_errors.sh`: E20a, E20b, E20c and E21 exit 0 (E20c leaves 51,200 bytes), H17 passes; `test_oom.sh`: caps of 16 to 45 MiB exit 0 with no output, 64 and 90 MiB exit 134, 128 MiB and above pass |
 | errors commit, `test.sh commit` | hand 37 of 42 (the 5 `.` cases fail); errors 5 of 5; oom 15 of 15 (6 exit 1, 9 exit 0; 5 s); quick 23 of 23; tiny and random fail the same 20 and 143 comparisons as `20798ce`, all `.` cases or relation R3 |
+| `.` commit, `test.sh commit` | every part passes: hand 42 of 42; random 800 comparisons (680 against `f3559af`, 289 against `cloak.py`) and 1,513 relation checks, 0 failed, 0 skipped. The red step is the errors commit's failing set (5 hand cases, 20 tiny and 143 random comparisons, all `.`) |
 | positive control, errors commit | `test.sh commit` on `oracle_bin.sh`: every part passes (errors 5 of 5), oom reported `n/a` |
 
 The last row means that, wherever the known defects cannot act, both old binaries agree with the
