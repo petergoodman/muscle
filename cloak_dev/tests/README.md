@@ -21,15 +21,16 @@ bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test.sh release 
 ```
 
 The binary defaults to `~/muscle-build/dev/bin/muscle`. Passing `scripts/oracle_bin.sh`, the byte
-oracle behind MUSCLE's command line, tests the harness itself: every tier must pass on it, except
-`test_oom.sh`, which `test.sh` reports as `n/a` there because a capped Python interpreter fails at
-startup with other exit statuses.
+oracle behind MUSCLE's command line, tests the harness itself: every tier must pass on it. `test.sh`
+reports as `n/a` there the parts that test the C++ source or binary rather than the output:
+`test_oom.sh` (a capped Python interpreter fails at startup with other exit statuses), and the
+sanitizers, warnings, mutants and performance.
 
 | Tier | Parts |
 |---|---|
 | edit | `check_fixtures.sh`; `tools/test_spec_check.py`; `test_hand.sh`; `test_errors.sh`; 30 tiny random cases through every oracle and relation |
 | commit | edit; `test_oom.sh`; `test_quick.sh --check-baseline`; `run_suite.py` on 300 `gen_cases.py` and 100 `gen_synth.py` cases, coverage asserted |
-| release | commit; `--check-baseline-slow`; 2,000 + 800 more random cases; and, still to build (the tier fails until they exist): sanitizer builds, compiler warnings, mutation testing, performance against `ddc9df1`, digit-plane tagging, the memoised `f3559af` build on the large fixtures |
+| release | commit; `--check-baseline-slow`; 2,000 + 800 more random cases; `test_sanitize.sh`; `warn_diff.sh`; `test_mutants.sh`; `test_perf.sh` against `ddc9df1`; `tag_runs.py`; `test_seenset.sh`. Run by `scripts/gate_a.sh`, which first builds the sanitizer variant of the same commit; about 3 h |
 
 Gate B (`scripts/gate_b.sh`) runs a binary on the users' own ensembles and `cloak-v0.1.0`'s outputs
 for them; `scripts/smoke_check.sh` is the one-minute check of a released binary on another machine.
@@ -114,6 +115,13 @@ build.
   (`build_variant.sh mutant`) and runs `test.sh edit`, then `test.sh commit`, then, for a survivor,
   `test_sanitize.sh` on its sanitizer build. It requires the control and the equivalent mutants to
   survive and every killable mutant to be killed.
+- **Performance.** `scripts/test_perf.sh CAND [REF]` (REF `ddc9df1`'s gate A binary) runs five
+  inputs 3 times per binary, alternating, through `tools/runmeasure.py` (60 s, 3 GB):
+  `tools/gen_scale.py 1 1000 1500 16 0.3 0.3 10`, PF00188_n92, `tools/gen_large.py pairs 1000 30`,
+  `gen_scale.py 7 500 500 30 0.3 0.3 10` and the first as a path list. It fails if a median time
+  exceeds 1.3 x REF + 0.2 s, a median peak RSS 1.2 x REF + 20 MB, or any run does not exit 0
+  (engineering thresholds). An n-doubling series and `tools/fit_mem.py`'s memory fit are printed
+  but do not gate. Run it on an idle machine: the timings are wall-clock.
 - **Digit-plane tagging.** `tools/tag_runs.py` reruns every MANIFEST case with residue i of every
   row replaced, in every MSA, by a base-36 digit of i - 1 (one plane per digit). The outputs must
   keep the untagged gap mask (R17), and the digits must show that every output column is exactly
@@ -138,6 +146,7 @@ build.
 | sanitizers, positive control | mutant M09 (`n = 0` guard removed) on the asan tree fails E06 with exit 134 (`_GLIBCXX_ASSERTIONS`: `operator[]` out of range) |
 | warnings, `e0eda41` against `ddc9df1` | g++ 12 and clang++ 14: 4 gating warnings each, all in MUSCLE's headers (`mx.h`, `mysparsemx.h`, `tree.h`), none new; with conversion warnings 11 and 10, none new; 36 s. Positive control: an unused variable is reported as new by both |
 | mutants, `e0eda41` | 33 mutants, 28 min. Every killable mutant is killed (28 of 28): 25 by the edit tier, and M11, M14 and N08 by the commit tier (the Pfam fixtures, `oom`). The control and M08, X01, X02, X03 survive. M07 (`create_output` filtering at 2 instead of `-mincol`), recorded as equivalent, is killed by E15a, E15c and the tiny `-mincol 3` cases (exit 139): since the rows commit, the no-survivor check reads `create_output`'s result, so its filter is not redundant. The run therefore fails on M07's classification (CHANGELOG) |
+| performance, `e0eda41` against `ddc9df1` | medians, candidate / reference: scale 2.29 / 2.09 s, 674.6 / 674.6 MB; PF00188_n92 0.06 / 0.05 s, 24.6 / 24.7 MB; pairs 0.18 / 0.24 s, 175.2 / 193.0 MB; K = 30 0.51 / 0.59 s, 214.3 / 214.3 MB; path list 2.16 / 2.39 s, 797.6 / 797.9 MB; all pass, 51 s. Series n = 500 to 4,000: 0.28 to 4.86 s, 117 to 1,468 MB. Fit over 8 points: 7.8 MB + 27.5 B per cell + 9.7 B per row x output column. Positive control: `f3559af` times out (60 s) on all 5 inputs |
 | tagging, `e0eda41` | 23 of 23 cases pass (1 or 2 planes), 36 s. Positive control: mutant N12 (`p` for `p-1`) fails all 23 |
 | O5, `e0eda41` | the 4 `never` fixtures pass (PF00353full_n1226_s5: 95 s, 924 MB for the variant). Control: the variant reproduces the 17 `fast` expected outputs |
 | positive control, errors commit | `test.sh commit` on `oracle_bin.sh`: every part passes (errors 5 of 5), oom reported `n/a` |
