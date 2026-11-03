@@ -114,6 +114,14 @@ build.
   (`build_variant.sh mutant`) and runs `test.sh edit`, then `test.sh commit`, then, for a survivor,
   `test_sanitize.sh` on its sanitizer build. It requires the control and the equivalent mutants to
   survive and every killable mutant to be killed.
+- **Digit-plane tagging.** `tools/tag_runs.py` reruns every MANIFEST case with residue i of every
+  row replaced, in every MSA, by a base-36 digit of i - 1 (one plane per digit). The outputs must
+  keep the untagged gap mask (R17), and the digits must show that every output column is exactly
+  one of the definition's classes. This sees which residue of a repeated-letter run was written.
+- **O5, the seen-set variant of `f3559af`.** `tools/make_seenset.py` memoises `f3559af`'s
+  recursion; `scripts/test_seenset.sh` builds it and requires, on the four `never` fixtures, that
+  the binary's output without its rows of at most one residue equals the variant's byte for byte.
+  `--control` checks the variant on the `fast` fixtures against their expected outputs.
 
 ## Measured (2026-11-02, laptop, WSL Debian 12)
 
@@ -130,6 +138,8 @@ build.
 | sanitizers, positive control | mutant M09 (`n = 0` guard removed) on the asan tree fails E06 with exit 134 (`_GLIBCXX_ASSERTIONS`: `operator[]` out of range) |
 | warnings, `e0eda41` against `ddc9df1` | g++ 12 and clang++ 14: 4 gating warnings each, all in MUSCLE's headers (`mx.h`, `mysparsemx.h`, `tree.h`), none new; with conversion warnings 11 and 10, none new; 36 s. Positive control: an unused variable is reported as new by both |
 | mutants, `e0eda41` | 33 mutants, 28 min. Every killable mutant is killed (28 of 28): 25 by the edit tier, and M11, M14 and N08 by the commit tier (the Pfam fixtures, `oom`). The control and M08, X01, X02, X03 survive. M07 (`create_output` filtering at 2 instead of `-mincol`), recorded as equivalent, is killed by E15a, E15c and the tiny `-mincol 3` cases (exit 139): since the rows commit, the no-survivor check reads `create_output`'s result, so its filter is not redundant. The run therefore fails on M07's classification (CHANGELOG) |
+| tagging, `e0eda41` | 23 of 23 cases pass (1 or 2 planes), 36 s. Positive control: mutant N12 (`p` for `p-1`) fails all 23 |
+| O5, `e0eda41` | the 4 `never` fixtures pass (PF00353full_n1226_s5: 95 s, 924 MB for the variant). Control: the variant reproduces the 17 `fast` expected outputs |
 | positive control, errors commit | `test.sh commit` on `oracle_bin.sh`: every part passes (errors 5 of 5), oom reported `n/a` |
 
 The last row means that, wherever the known defects cannot act, both old binaries agree with the
