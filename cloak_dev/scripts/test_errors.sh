@@ -6,7 +6,8 @@
 #   bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test_errors.sh [BINARY]
 #     BINARY   default ~/muscle-build/dev/bin/muscle
 #
-# Every case runs in a fresh empty working directory, capped at 2 GB of virtual memory and 20 s. A
+# Every case runs in a fresh empty working directory, capped at 2 GB of virtual memory
+# (CLOAK_VMEM_KB overrides, in KiB or "unlimited") and 20 s. A
 # case passes if the exit status is exactly the expected one, the check below holds, and no file
 # appears in the working directory. Stderr is not examined.
 #   E20a  -output /dev/full, small output, so the error appears only at close: exit 1
@@ -26,6 +27,7 @@ bash "$HERE/check_fixtures.sh" || exit 2
 SMALL="$DATA/hand/H03.efa"; SMALL_EXP="$DATA/hand/expected/H03.fa"
 BIG="$DATA/PF00745_n387_s5.efa"; BIG_EXP="$DATA/expected/PF00745_n387_s5.m2.fa"
 LIMIT_KB=50
+VMEM=${CLOAK_VMEM_KB:-2000000}   # unlimited for sanitizer builds (test_sanitize.sh)
 [ "$(stat -c %s "$BIG_EXP")" -gt $((LIMIT_KB*1024)) ] ||
   { echo "E20c needs an expected output larger than $LIMIT_KB KiB" >&2; exit 2; }
 OUT="$HOME/muscle-runs/test_errors/$(date +%Y%m%d-%H%M%S)"
@@ -46,15 +48,15 @@ finish() {  # ID WHAT EXPECTED_EXIT RC WHY (empty unless the case-specific check
 }
 
 start E20a
-( cd "$run" && ulimit -v 2000000 && timeout 20 "$BIN" -cloak "$SMALL" -output /dev/full ) > "$log" 2>&1
+( cd "$run" && ulimit -v "$VMEM" && timeout 20 "$BIN" -cloak "$SMALL" -output /dev/full ) > "$log" 2>&1
 finish E20a "-output /dev/full" 1 $? ""
 
 start E20b
-( cd "$run" && ulimit -v 2000000 && timeout 20 "$BIN" -cloak "$SMALL" -output - ) > /dev/full 2> "$log"
+( cd "$run" && ulimit -v "$VMEM" && timeout 20 "$BIN" -cloak "$SMALL" -output - ) > /dev/full 2> "$log"
 finish E20b "-output - on a full standard output" 1 $? ""
 
 start E20c
-( cd "$run" && trap '' XFSZ && ulimit -v 2000000 && ulimit -f $LIMIT_KB &&
+( cd "$run" && trap '' XFSZ && ulimit -v "$VMEM" && ulimit -f $LIMIT_KB &&
   timeout 20 "$BIN" -cloak "$BIG" -output "$out" ) > "$log" 2>&1
 rc=$?
 why=""; [ -e "$out" ] && why="file left at the output path ($(stat -c %s "$out") bytes)"
@@ -62,13 +64,13 @@ finish E20c "write fails at a $LIMIT_KB KiB file-size limit" 1 $rc "$why"
 
 start E21
 printf 'SENTINEL\n' > "$out"
-( cd "$run" && ulimit -v 2000000 && timeout 20 "$BIN" -cloak '' -output "$out" ) > "$log" 2>&1
+( cd "$run" && ulimit -v "$VMEM" && timeout 20 "$BIN" -cloak '' -output "$out" ) > "$log" 2>&1
 rc=$?
 why=""; [ "$(cat "$out" 2>/dev/null)" = "SENTINEL" ] || why="output path written"
 finish E21 "-cloak with an empty value" 1 $rc "$why"
 
 start H17
-( cd "$run" && ulimit -v 2000000 && timeout 20 "$BIN" -cloak "$SMALL" -output - ) > "$out" 2> "$log"
+( cd "$run" && ulimit -v "$VMEM" && timeout 20 "$BIN" -cloak "$SMALL" -output - ) > "$out" 2> "$log"
 rc=$?
 why=""; cmp -s "$out" "$SMALL_EXP" || why="standard output differs from hand/expected/H03.fa"
 finish H17 "-output - writes the output to standard output" 0 $rc "$why"

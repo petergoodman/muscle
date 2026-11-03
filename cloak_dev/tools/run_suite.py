@@ -50,7 +50,8 @@ MINIMA = {'multi2': 250, 'multi3': 180, 'tie': 200, 'row0': 120, 'row1': 70, 'do
 def run(binary, args, cwd, cap_gb=2, timeout=60):
     """Exit status (128 + signal for a signal, 'timeout') and wall time."""
     def limits():
-        resource.setrlimit(resource.RLIMIT_AS, (int(cap_gb * 2**30),) * 2)
+        if os.environ.get('CLOAK_VMEM_KB') != 'unlimited':   # sanitizer builds (test_sanitize.sh)
+            resource.setrlimit(resource.RLIMIT_AS, (int(cap_gb * 2**30),) * 2)
         resource.setrlimit(resource.RLIMIT_FSIZE, (200 * 2**20,) * 2)
     t0 = time.time()
     cmd = (['bash', binary] if binary.endswith('.sh') else [binary]) + args

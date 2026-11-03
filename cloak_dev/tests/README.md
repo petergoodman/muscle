@@ -92,6 +92,19 @@ status:
 2 GiB in steps of √2. Each run must either exit 1 with the output path untouched or exit 0 with
 the expected bytes, and both kinds must occur. No cap is tuned to a binary.
 
+## Quality tooling (release tier)
+
+Variants are built by `scripts/build_variant.sh {asan|mutant ID CPP|mutant-asan ID CPP|seenset
+CPP|portable}`, each in its own `~/muscle-build/` directory with a `BUILD_INFO.txt` naming its base
+build.
+
+- **Sanitizers.** `scripts/test_sanitize.sh` runs the hand, error, fixture and 30 tiny cases on the
+  `asan` build (AddressSanitizer, UBSan, `_GLIBCXX_ASSERTIONS`; the 2026-10-30 audit's
+  recipe). A report exits 86 (an assertion, 134), so the tests fail through exit status alone.
+  `scripts/ubsan.supp` silences MUSCLE's known null `memcpy` argument in `fasta2.cpp`. Address-space
+  caps are lifted with `CLOAK_VMEM_KB=unlimited`, which every test script honours. Valgrind is not
+  installed in the WSL image and is not run.
+
 ## Measured (2026-11-02, laptop, WSL Debian 12)
 
 | Run | Result |
@@ -103,6 +116,8 @@ the expected bytes, and both kinds must occur. No cap is tuned to a binary.
 | red step for the errors commit, on `20798ce` | `test_errors.sh`: E20a, E20b, E20c and E21 exit 0 (E20c leaves 51,200 bytes), H17 passes; `test_oom.sh`: caps of 16 to 45 MiB exit 0 with no output, 64 and 90 MiB exit 134, 128 MiB and above pass |
 | errors commit, `test.sh commit` | hand 37 of 42 (the 5 `.` cases fail); errors 5 of 5; oom 15 of 15 (6 exit 1, 9 exit 0; 5 s); quick 23 of 23; tiny and random fail the same 20 and 143 comparisons as `20798ce`, all `.` cases or relation R3 |
 | `.` commit, `test.sh commit` | every part passes: hand 42 of 42; random 800 comparisons (680 against `f3559af`, 289 against `cloak.py`) and 1,513 relation checks, 0 failed, 0 skipped. The red step is the errors commit's failing set (5 hand cases, 20 tiny and 143 random comparisons, all `.`) |
+| sanitizers, `e0eda41` | `build_variant.sh asan` 2.5 min; `test_sanitize.sh`: hand 42 of 42, errors 5 of 5, quick 23 of 23, tiny pass; no report; 43 s |
+| sanitizers, positive control | mutant M09 (`n = 0` guard removed) on the asan tree fails E06 with exit 134 (`_GLIBCXX_ASSERTIONS`: `operator[]` out of range) |
 | positive control, errors commit | `test.sh commit` on `oracle_bin.sh`: every part passes (errors 5 of 5), oom reported `n/a` |
 
 The last row means that, wherever the known defects cannot act, both old binaries agree with the

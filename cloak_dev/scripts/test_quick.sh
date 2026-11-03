@@ -9,7 +9,7 @@
 #     --check-baseline-slow also the two slow cases (about 4 min, up to 1.3 GB)
 #
 # scripts/check_fixtures.sh runs first (decision 009). Every run is capped at 4 GB of virtual
-# memory and 120 s (600 s for the baseline on the slow cases). The cases with a baseline column of
+# memory (CLOAK_VMEM_KB overrides, in KiB or "unlimited", for sanitizer builds) and 120 s (600 s for the baseline on the slow cases). The cases with a baseline column of
 # fast or slow keep every row (checked 2026-11-01), so decision 003's relation reduces to byte
 # identity with the expected output for the baseline too. Outputs go to a new directory under
 # ~/muscle-runs/test_quick/. Exit status 0 only if every case read from MANIFEST.tsv is compared and
@@ -37,7 +37,7 @@ run_case() {  # label binary efa mincol expected [timeout] -> one result line, 0
   local label=$1 bin=$2 efa=$3 mc=$4 exp=$5 cap=${6:-120} name t0 t1 rc
   name="$label.$(basename "$efa" .efa).m$mc"
   t0=$(date +%s.%N)
-  ( ulimit -v 4000000; timeout "$cap" "$bin" -cloak "$DATA/$efa" -mincol "$mc" -output "$OUT/$name.fa" > "$OUT/$name.log" 2>&1 )
+  ( ulimit -v "${CLOAK_VMEM_KB:-4000000}"; timeout "$cap" "$bin" -cloak "$DATA/$efa" -mincol "$mc" -output "$OUT/$name.fa" > "$OUT/$name.log" 2>&1 )
   rc=$?
   t1=$(date +%s.%N)
   local secs; secs=$(awk -v a="$t0" -v b="$t1" 'BEGIN{printf "%.2f", b-a}')

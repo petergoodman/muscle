@@ -8,8 +8,9 @@
 #     --predict COLUMN  v010 or v020: instead of requiring every case to pass, require each case to
 #                       pass or fail as that MANIFEST column predicts (the recorded red step)
 #
-# Every case runs in a fresh copy of the fixture directory, capped at 2 GB of virtual memory, 100 MB
-# of file size and 20 s. A case passes if the exit status is exactly the expected one and:
+# Every case runs in a fresh copy of the fixture directory, capped at 2 GB of virtual memory
+# (CLOAK_VMEM_KB overrides, in KiB or "unlimited", for sanitizer builds), 100 MB of file size and
+# 20 s. A case passes if the exit status is exactly the expected one and:
 #   exit 0: the output equals the expected file byte for byte;
 #   exit 1: a sentinel file at the output path is unchanged (nothing was written there).
 # In both cases no file may appear in the working directory. Stderr is not examined.
@@ -51,7 +52,7 @@ while IFS=$'\t' read -r id args ex exp v010 v020 what || [ -n "$id" ]; do
   out="$OUT/out/$id.fa"
   [ "$ex" = 1 ] && printf 'SENTINEL\n' > "$out"
   # shellcheck disable=SC2086
-  ( cd "$run" && ulimit -v 2000000 && ulimit -f 100000 && timeout 20 "$BIN" ${args//\{out\}/$out} \
+  ( cd "$run" && ulimit -v "${CLOAK_VMEM_KB:-2000000}" && ulimit -f 100000 && timeout 20 "$BIN" ${args//\{out\}/$out} \
       > "$OUT/log/$id.log" 2>&1 )
   rc=$?
   after=$(cd "$run" && find . -type f | sort)
