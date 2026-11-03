@@ -5,7 +5,7 @@ Writes OUTDIR/<name>/cloak.cpp for every mutant and OUTDIR/MUTANTS.tsv (name, ki
 killer). Kinds: control (unmutated: must survive), equivalent (argued to compute the same output:
 must survive), killable (must be killed). Every replacement must apply exactly once, so a mutant
 cannot silently stop matching the code. M01-M14 are the 2026-10-30 audit's mutants of
-create_output; N01-N15 and X01-X03 were added for cloak-v0.3.0.
+create_output; N01-N15 and X01-X04 were added for cloak-v0.3.0.
 """
 import os
 import sys
@@ -74,7 +74,8 @@ MUTANTS = {
                   "                key[k - 1] = pos_col[k][r][p];\n")]),
     'M06_mincol_gt': ('killable', 'H01', [
         ("if (j - i >= minimumColumns) {", "if (j - i > minimumColumns) {")]),
-    'M07_filter_ge2': ('equivalent', 'none: remove_singletons filters at -mincol again', [
+    # Equivalent in the audit's code; since C1 the no-survivor check reads this filter's result.
+    'M07_filter_ge2': ('killable', 'E15a, E15c', [
         ("if (j - i >= minimumColumns) {", "if (j - i >= 2) {")]),
     'M08_no_residue_count_assert': ('equivalent', 'none: the loader guarantees equal counts', [
         ("            asserta(pos_col[k][r].size() == residues0[r]);\n", "")]),
@@ -139,6 +140,9 @@ MUTANTS = {
          "            std::vector<int> key(K);\n            key[K - 1] = static_cast<int>(x);\n")]),
     'X03_labels_from_last_msa': ('equivalent', 'none: every MSA has the same sorted labels', [
         (LABELS0, "    const auto& firstLabels = allLabels.back();\n")]),
+    'X04_no_remove_singletons': ('equivalent', 'none: create_output already filters at -mincol', [
+        ("    auto letters_array_output = remove_singletons(letters_array_output_initial, minimumColumns);\n",
+         "    auto letters_array_output = letters_array_output_initial;\n")]),
 }
 
 

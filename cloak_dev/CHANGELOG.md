@@ -24,12 +24,12 @@ also holds its gate record. The next session starts from the top entry.
 - **Failed:** M07 (filtering at 2 in `create_output`), recorded as equivalent by the 2026-10-30
   audit, is killed by E15a, E15c and the tiny `-mincol 3` cases. Since C1, the no-survivor check
   reads `create_output`'s result, so that filter is not redundant (ANALYSIS 5.4). The shipped code
-  is unaffected. Its classification was left unchanged, so `test_mutants.sh` exits 1.
-- **Not run:**
-  - Valgrind, which is not installed;
-  - gate A1's 3-hour release tier, which is outside this approval.
-- **Next:** Peter decides M07 (my recommendation: make it killable, expected killer E15a and
-  E15c). Then gate A1.
+  is unaffected.
+- **Decided** (Peter): M07 becomes killable (killers E15a and E15c), and X04 (skipping
+  `remove_singletons`, the redundant filter) is added as an equivalent mutant. Rerun: M07 is
+  killed, and X04 survives every tier.
+- **Not run:** Valgrind, which is not installed and which Peter agreed to skip.
+- **Next:** gate A1, run on the commit with the M07 change.
 
 ## 2026-11-02: `.` gaps (C3)
 

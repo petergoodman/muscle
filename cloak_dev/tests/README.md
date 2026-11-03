@@ -109,8 +109,8 @@ build.
   (the Makefile's flags, optimiser on), at `-Wall -Wextra` (gating) and with `-Wconversion
   -Wsign-conversion` (counted only). Warnings are compared without line numbers; a new gating
   warning fails.
-- **Mutants.** `tools/make_mutants.py` writes 33 mutants of `cloak.cpp` (the audit's M01 to M14,
-  N01 to N15 for 0.3.0, X01 to X03), each replacement applying exactly once, with a kind: control,
+- **Mutants.** `tools/make_mutants.py` writes 34 mutants of `cloak.cpp` (the audit's M01 to M14,
+  N01 to N15 for 0.3.0, X01 to X04), each replacement applying exactly once, with a kind: control,
   equivalent (argued to give the same output) or killable. `scripts/test_mutants.sh` builds each one
   (`build_variant.sh mutant`) and runs `test.sh edit`, then `test.sh commit`, then, for a survivor,
   `test_sanitize.sh` on its sanitizer build. It requires the control and the equivalent mutants to
@@ -145,7 +145,7 @@ build.
 | sanitizers, `e0eda41` | `build_variant.sh asan` 2.5 min; `test_sanitize.sh`: hand 42 of 42, errors 5 of 5, quick 23 of 23, tiny pass; no report; 43 s |
 | sanitizers, positive control | mutant M09 (`n = 0` guard removed) on the asan tree fails E06 with exit 134 (`_GLIBCXX_ASSERTIONS`: `operator[]` out of range) |
 | warnings, `e0eda41` against `ddc9df1` | g++ 12 and clang++ 14: 4 gating warnings each, all in MUSCLE's headers (`mx.h`, `mysparsemx.h`, `tree.h`), none new; with conversion warnings 11 and 10, none new; 36 s. Positive control: an unused variable is reported as new by both |
-| mutants, `e0eda41` | 33 mutants, 28 min. Every killable mutant is killed (28 of 28): 25 by the edit tier, and M11, M14 and N08 by the commit tier (the Pfam fixtures, `oom`). The control and M08, X01, X02, X03 survive. M07 (`create_output` filtering at 2 instead of `-mincol`), recorded as equivalent, is killed by E15a, E15c and the tiny `-mincol 3` cases (exit 139): since the rows commit, the no-survivor check reads `create_output`'s result, so its filter is not redundant. The run therefore fails on M07's classification (CHANGELOG) |
+| mutants, `e0eda41` | 33 mutants, 28 min. Every killable mutant is killed (28 of 28): 25 by the edit tier, and M11, M14 and N08 by the commit tier (the Pfam fixtures, `oom`). The control and M08, X01, X02, X03 survive. M07 (`create_output` filtering at 2 instead of `-mincol`), recorded as equivalent, is killed by E15a, E15c and the tiny `-mincol 3` cases (exit 139): since the rows commit, the no-survivor check reads `create_output`'s result, so its filter is not redundant. With Peter's approval M07 is now killable, and X04 (skipping `remove_singletons`, the filter that is redundant) is a new equivalent mutant: `test_mutants.sh M07` kills M07 in the edit tier, and `test_mutants.sh X04` leaves X04 surviving every tier |
 | performance, `e0eda41` against `ddc9df1` | medians, candidate / reference: scale 2.29 / 2.09 s, 674.6 / 674.6 MB; PF00188_n92 0.06 / 0.05 s, 24.6 / 24.7 MB; pairs 0.18 / 0.24 s, 175.2 / 193.0 MB; K = 30 0.51 / 0.59 s, 214.3 / 214.3 MB; path list 2.16 / 2.39 s, 797.6 / 797.9 MB; all pass, 51 s. Series n = 500 to 4,000: 0.28 to 4.86 s, 117 to 1,468 MB. Fit over 8 points: 7.8 MB + 27.5 B per cell + 9.7 B per row x output column. Positive control: `f3559af` times out (60 s) on all 5 inputs |
 | portable build and gate A refusals, `e0eda41` | `build_variant.sh portable` 1.6 min, no `-march=native` left; hand 42 of 42 and quick 23 of 23 byte-identical. `gate_a.sh` refuses the incremental dev binary, the portable binary built on it, and a path with no `BUILD_INFO.txt` |
 | tagging, `e0eda41` | 23 of 23 cases pass (1 or 2 planes), 36 s. Positive control: mutant N12 (`p` for `p-1`) fails all 23 |

@@ -4,8 +4,8 @@
 > speed rewrite of `ddc9df1` (gate A passed 2026-10-30) plus the corrections the reviews of
 > 2026-10-30 and 2026-11-01 found, built test first. Steps 1 to 3 are done (records, test
 > infrastructure, gate B0 passed on 2026-11-02), and so are step 4 (rows, errors and checked
-> output, `.` gaps) and step 5 (the quality pass, with one item for Peter: mutant M07); next is
-> step 6, gate A1.** Peter owns this document.
+> output, `.` gaps) and step 5 (the quality pass); next is step 6, gate A1.** Peter owns this
+> document.
 
 This is the project's living core document: what we are building and why, the constraints, the
 phases and their gates, open questions, where it stands, and the next step. It is read at the
@@ -109,7 +109,6 @@ is kept at `~/muscle-build/ref-ddc9df1/`, and Peter tags it `cloak-v0.2.0`. The 
 is committed (`tests/README.md`), with the red step recorded in `CHANGELOG.md`, and so is step 4
 (rows, errors and checked output, `.` gaps): the edit and commit tiers pass with no failure. The
 quality pass (step 5) is built and was run once on `e0eda41`: sanitizers, warnings, performance,
-tagging and the seen-set oracle pass; every killable mutant is killed. Mutant M07, recorded as
-equivalent, is killed (`tests/README.md`), so `test_mutants.sh` fails until its classification is
-decided. Next step: that decision, then gate A1: `build.sh --full` from a clean commit,
-`build_variant.sh portable`, and `scripts/gate_a.sh` on the portable binary (about 3 h).
+tagging and the seen-set oracle pass; every killable mutant is killed (M07, first recorded as
+equivalent, is now killable; `tests/README.md`). Next step: gate A1: `build.sh --full` from a clean
+commit, `build_variant.sh portable`, and `scripts/gate_a.sh` on the portable binary (about 3 h).
