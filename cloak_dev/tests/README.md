@@ -108,6 +108,12 @@ build.
   (the Makefile's flags, optimiser on), at `-Wall -Wextra` (gating) and with `-Wconversion
   -Wsign-conversion` (counted only). Warnings are compared without line numbers; a new gating
   warning fails.
+- **Mutants.** `tools/make_mutants.py` writes 33 mutants of `cloak.cpp` (the audit's M01 to M14,
+  N01 to N15 for 0.3.0, X01 to X03), each replacement applying exactly once, with a kind: control,
+  equivalent (argued to give the same output) or killable. `scripts/test_mutants.sh` builds each one
+  (`build_variant.sh mutant`) and runs `test.sh edit`, then `test.sh commit`, then, for a survivor,
+  `test_sanitize.sh` on its sanitizer build. It requires the control and the equivalent mutants to
+  survive and every killable mutant to be killed.
 
 ## Measured (2026-11-02, laptop, WSL Debian 12)
 
@@ -123,6 +129,7 @@ build.
 | sanitizers, `e0eda41` | `build_variant.sh asan` 2.5 min; `test_sanitize.sh`: hand 42 of 42, errors 5 of 5, quick 23 of 23, tiny pass; no report; 43 s |
 | sanitizers, positive control | mutant M09 (`n = 0` guard removed) on the asan tree fails E06 with exit 134 (`_GLIBCXX_ASSERTIONS`: `operator[]` out of range) |
 | warnings, `e0eda41` against `ddc9df1` | g++ 12 and clang++ 14: 4 gating warnings each, all in MUSCLE's headers (`mx.h`, `mysparsemx.h`, `tree.h`), none new; with conversion warnings 11 and 10, none new; 36 s. Positive control: an unused variable is reported as new by both |
+| mutants, `e0eda41` | 33 mutants, 28 min. Every killable mutant is killed (28 of 28): 25 by the edit tier, and M11, M14 and N08 by the commit tier (the Pfam fixtures, `oom`). The control and M08, X01, X02, X03 survive. M07 (`create_output` filtering at 2 instead of `-mincol`), recorded as equivalent, is killed by E15a, E15c and the tiny `-mincol 3` cases (exit 139): since the rows commit, the no-survivor check reads `create_output`'s result, so its filter is not redundant. The run therefore fails on M07's classification (CHANGELOG) |
 | positive control, errors commit | `test.sh commit` on `oracle_bin.sh`: every part passes (errors 5 of 5), oom reported `n/a` |
 
 The last row means that, wherever the known defects cannot act, both old binaries agree with the
