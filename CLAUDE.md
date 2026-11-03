@@ -62,7 +62,8 @@ bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/build.sh        
 bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/build.sh --full     # clean build
 bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test.sh edit       # after every build, ~1 min
 bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test.sh commit     # before every commit, ~5 min
-bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test.sh release    # gate A
+bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/gate_a.sh BINARY   # gate A: release tier, ~3 h
+bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/build_variant.sh portable  # release binary; also asan, mutant, seenset
 bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test_quick.sh       # 23 fixtures
 bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test_hand.sh        # 42 hand cases
 bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test_random.sh 200  # 800 random comparisons
@@ -82,6 +83,10 @@ bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test_oom.sh     
   `--predict v010|v020` records the red step). `test_random.sh` and `test.sh` run random ensembles
   through every oracle (`tools/run_suite.py`). All exit nonzero on any failure or skip, and all
   start with `check_fixtures.sh`.
+- Release-tier parts, each runnable alone: `test_sanitize.sh` (after `build_variant.sh asan`),
+  `warn_diff.sh`, `test_mutants.sh` (~30 min), `test_perf.sh`, `tools/tag_runs.py`,
+  `test_seenset.sh`. Variants build in their own `~/muscle-build/<variant>/`; `dev` is only read.
+  `gate_a.sh` refuses a binary that is not from a `--full` build of a clean commit.
 - `gate_b.sh DATA LIST BINARY bytes|strip` is gate B on the users' data (paths and pass lines in
   the private notes); `smoke_check.sh BINARY SHA256` is the users' one-minute check of a release.
 - Timing and peak memory: `tools/runmeasure.py` (WSL has no `/usr/bin/time`).

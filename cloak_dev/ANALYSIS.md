@@ -147,7 +147,10 @@ holds for both `f3559af` and `ddc9df1` unless stated.
 4. **Nothing survives.** A result with no column left stops with `Empty FASTA` (exit 1) rather than
    writing an empty file. Once every row is kept, an empty result would instead reach
    `MSA::ToFASTAFile` with no columns, where `(0 - 1)/60 + 1` wraps and the loop writes out of
-   bounds, so 0.3.0 stops before building the output. (open: exit 1 kept in 0.3.0)
+   bounds, so 0.3.0 stops before building the output. That check reads `create_output`'s result,
+   so it is `create_output`'s own `-mincol` filter that makes it right; `remove_singletons`, which
+   filters again later, removes nothing (mutation testing, 2026-11-02: filtering at 2 in
+   `create_output` exits 139 at `-mincol 3` when no column survives). (open: exit 1 kept in 0.3.0)
 5. **Log line.** The start message prints `userMincol` (0 when `-mincol` is absent) instead of the
    value used. (open)
 6. **Documentation.** The default output name is `cloak_result.fasta`, while the README promises

@@ -4,6 +4,33 @@ Session history for the CLOAK work on the fork `petergoodman/muscle`, newest fir
 about ten lines: what was done, what failed and why, what is next. An entry that closes a gate
 also holds its gate record. The next session starts from the top entry.
 
+## 2026-11-02: quality pass (Q1 to Q6)
+
+- **Built:**
+  - `build_variant.sh` (asan, mutant, mutant-asan, seenset, portable);
+  - `test_sanitize.sh`, `warn_diff.sh`, `make_mutants.py` + `test_mutants.sh`, `test_perf.sh`,
+    `tag_runs.py`, `make_seenset.py` + `test_seenset.sh`, `gate_a.sh`;
+  - the release tier in `test.sh`, with no `todo` part left.
+
+  Every part has a positive control that fails as required.
+- **Run once on `e0eda41`** (numbers in `tests/README.md`):
+  - sanitizers clean;
+  - no new compiler warning;
+  - performance within thresholds of `ddc9df1`;
+  - tagging 23 of 23;
+  - O5 4 of 4;
+  - the portable build byte-identical on the hand and fixture cases.
+- **Mutants:** all 28 killable mutants are killed, and the control and 4 equivalents survive.
+- **Failed:** M07 (filtering at 2 in `create_output`), recorded as equivalent by the 2026-10-30
+  audit, is killed by E15a, E15c and the tiny `-mincol 3` cases. Since C1, the no-survivor check
+  reads `create_output`'s result, so that filter is not redundant (ANALYSIS 5.4). The shipped code
+  is unaffected. Its classification was left unchanged, so `test_mutants.sh` exits 1.
+- **Not run:**
+  - Valgrind, which is not installed;
+  - gate A1's 3-hour release tier, which is outside this approval.
+- **Next:** Peter decides M07 (my recommendation: make it killable, expected killer E15a and
+  E15c). Then gate A1.
+
 ## 2026-11-02: `.` gaps (C3)
 
 - **Code** (`src/cloak.cpp`, decision 008):
