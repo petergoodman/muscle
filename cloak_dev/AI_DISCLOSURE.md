@@ -6,6 +6,26 @@ them accurately. Newest first. One entry per milestone, at most 15 lines: tool a
 operator, what it did, files touched. Commits made with an AI agent carry a `Co-Authored-By` line.
 No AI-generated result in this project is accepted without the tests and gates in `PLAN.md`.
 
+## 2026-10-30 to 2026-11-03: cloak-v0.3.0
+
+**Tool:** Claude Code (VS Code extension) on Peter's laptop, building and running in WSL.
+**Model:** `claude-opus-5-5` (Claude Opus 5.5, per the commits' `Co-Authored-By` lines).
+**Operator:** Peter Goodman. All of this milestone's work, reviews included, ran in Claude Code.
+
+**What it did.**
+- **Reviews.** The 2026-10-30 audit of `ddc9df1`, the 2026-11-01 review against the paper (deleted
+  rows, `.` as a residue, errors that exit 0, unchecked writes; `ANALYSIS.md`, section 5), and the
+  2026-11-02 pre-release audit with an oracle written from the paper.
+- **Records.** Drafted decisions 003, 007, 008 and 009, the 0.3.0 plan and the corrected analysis.
+- **Tests.** Wrote the checker, oracles, random generators, hand fixtures (installed by Peter), the
+  test tiers, the quality tooling and `gate_a.sh`, `gate_b.sh` and `smoke_check.sh`.
+- **Code.** Wrote C1 to C3 in `src/cloak.cpp` (rows, errors and checked output, `.` gaps), test
+  first.
+- **Gates and release.** Ran gates B0, A1 and B1; drafted the release notes and the users'
+  instructions.
+
+**Files.** `src/cloak.cpp`; `CLAUDE.md`; `cloak_dev/` (scripts, tools, tests, records).
+
 ## 2026-10-27 to 2026-10-29: diagnosis, hotfix code and project setup
 
 **Tool:** Claude in Cowork mode (Claude desktop app, cloud sandbox with read and write access to

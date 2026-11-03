@@ -4,6 +4,74 @@ Session history for the CLOAK work on the fork `petergoodman/muscle`, newest fir
 about ten lines: what was done, what failed and why, what is next. An entry that closes a gate
 also holds its gate record. The next session starts from the top entry.
 
+## 2026-11-03: release cloak-v0.3.0 (step 8)
+
+- **Binary frozen:** the gated portable binary copied to `~/muscle-release/cloak-v0.3.0/`
+  (read-only, with `BUILD_INFO.txt` and `.sha256`) and to a private share folder; both SHA-256
+  `f461271d...a6fa467`.
+- **Gate B rerun in bytes mode** on the frozen copy (`gate_b.sh ... bytes`,
+  `~/muscle-runs/gate_b/20261103-101830-bytes/`): reference IDENTICAL 58, failed FINISHED 19,
+  failures 0; all 77 outputs byte-identical to B1's. 0.3.0 reproduces every 0.1.0 reference exactly.
+- **Public check:** `check_public.sh` covers HEAD's files and unpushed messages only, so the files
+  of all 11 unpushed commits and the tag message were also scanned with its terms: clean.
+- **Tag** `cloak-v0.3.0`, annotated, on `790cd12`, the gated commit; its message is the release
+  notes (11 known issues), identical to the approved draft. The gate records are in this commit.
+- **Rehearsal** from a Linux clone of the local tag
+  (`~/muscle-runs/release-rehearsal/20261103-104113/`):
+  - the share copy passes `sha256sum -c` and `smoke_check.sh` (23 of 23, 42 of 42, PASS); a
+    relative BINARY path FAILs, as known issue 10 says;
+  - a build from the tag with `build_linux.bash` reads `[790cd12]` (SHA-256 `397f2774...`), passes
+    the smoke check, and `gate_b.sh ... bytes` gives IDENTICAL 58, FINISHED 19
+    (`20261103-104551-bytes`), all 77 outputs identical to the release binary's.
+- **Next:** Peter pushes `cloak` and the tag and sends the release to its users; a fresh GitHub
+  clone is then checked; then the audit's harness fixes.
+
+## 2026-11-02: pre-release audit of 790cd12
+
+- **Result:** no defect in `src/cloak.cpp` or the portable binary (`f461271d...`). Every code
+  change since `ddc9df1` is C1, C2 or C3; test data were only added; gate records match their logs.
+- **Independent oracle** (written from the paper, no code shared with `tools/`; scripts and outputs
+  in `~/muscle-runs/audit-20261102/`): 9,500 generated cases (5,000 general, 1,500 heavy, 1,500
+  with `-log` on this binary and on the asan build), 0 failed; 2,531 also checked against `f3559af`
+  and 2,707 against `cloak.py` run end to end. Fixtures and gate B ensembles byte-identical; gate
+  B references identical to 0.1.0's without stripping. `test.sh commit` passes; the smoke check
+  passes from a Linux clone.
+- **Found:** `smoke_check.sh` FAILs falsely unless BINARY is an absolute path; relation runs ignore
+  exit status, `check_fixtures.sh` lacks `--strict` and skips MANIFESTs, `gate_a.sh` does not pin the
+  harness; `AI_DISCLOSURE.md` has no 0.3.0 entry.
+- **Failed:** my first oracle expected output at `-mincol 1` (23 false failures); rerun clean.
+- **Next:** step 8 (recommended: tag `790cd12`; users pass an absolute path to the smoke check),
+  then the harness fixes.
+
+## 2026-11-02: gate B1 passed on 790cd12
+
+- **Gate record:** commit `790cd12`; portable release binary SHA-256 `f461271d...a6fa467` (the
+  gate A1 binary); `gate_b.sh ... strip`; output `~/muscle-runs/gate_b/20261102-225557-strip/`.
+- **Result:** every reference output meets decision 003's relation; every output passes
+  `spec_check.py --order` with every sequence present; every ensemble 0.1.0 could not finish
+  completes, all runs under 5 s and 1.4 GB. The smoke ensemble matches `cloak.py` (`d846718`,
+  through `ref_cloakpy.py`). Tables and the reproducer comparison are in the private notes.
+- **Failed:** the plan expected 5 incomplete ensembles left out; the script reports 0, correctly,
+  since those `.efa.tmp` files have no `.efa` beside them. Background `wsl.exe` completion notices
+  arrived before the WSL jobs had finished; results were read from the run directories.
+- **Next:** the release (PLAN.md, step 8). First decide whether the tag goes on `790cd12`, whose
+  binary was gated, or on the commit that carries the gate records.
+
+## 2026-11-02: gate A1 passed on 790cd12
+
+- **Gate record:**
+  - commit `790cd12`;
+  - `build.sh --full`: `src state: clean`, dev binary `4c3bb6a3d9337900159b5b98e15518bb371ea3789a951f45548940393218d6d2`;
+  - portable release binary (`build_variant.sh portable`, `~/muscle-build/portable/bin/muscle`):
+    SHA-256 `f461271d39d342c1c1f42164673238121cd3444f09e50023ec0caf4baa6fa467`;
+  - output `~/muscle-runs/gate_a/20261102-190956/` (`GATE_A.txt`).
+- **Result:** `gate_a.sh` passed the release tier, 0 of 16 parts failed, in 44 min:
+  - random-big: 5,600 comparisons and 6,562 relation checks, 0 failed, 0 skipped;
+  - mutants: 34, all as required;
+  - performance within thresholds of `ddc9df1`.
+- **Fixed in records:** the earlier mutant count (27 killable before the M07 relabel, not 28).
+- **Next:** gate B1 (PLAN.md, step 7) on this portable binary.
+
 ## 2026-11-02: quality pass (Q1 to Q6)
 
 - **Built:**
@@ -20,7 +88,8 @@ also holds its gate record. The next session starts from the top entry.
   - tagging 23 of 23;
   - O5 4 of 4;
   - the portable build byte-identical on the hand and fixture cases.
-- **Mutants:** all 28 killable mutants are killed, and the control and 4 equivalents survive.
+- **Mutants:** all 27 killable mutants are killed (24 by the edit tier, 3 by the commit tier), and
+  the control and 4 equivalents survive. The Q3 commit message says 28 and 25, which is a miscount.
 - **Failed:** M07 (filtering at 2 in `create_output`), recorded as equivalent by the 2026-10-30
   audit, is killed by E15a, E15c and the tiny `-mincol 3` cases. Since C1, the no-survivor check
   reads `create_output`'s result, so that filter is not redundant (ANALYSIS 5.4). The shipped code

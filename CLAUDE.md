@@ -40,6 +40,10 @@ Not read at the start: `cloak_dev/AI_DISCLOSURE.md` and older CHANGELOG entries.
 - **Frozen baseline**: `~/muscle-baseline/muscle-f3559af` (SHA-256 in `muscle-f3559af.sha256`
   beside it), built 2026-10-29 from upstream `f3559af` with `build_linux.bash` in a fresh clone.
   `-version` reads `muscle 5.3.linux64 [f3559af]`. Never rebuilt, overwritten or moved.
+- **Release binaries**: `~/muscle-release/cloak-vX.Y.Z/muscle-cloak-vX.Y.Z`, read-only, with
+  `BUILD_INFO.txt` and a `.sha256` beside it: the gated portable build, copied out of
+  `~/muscle-build/portable/` (a build area) before anything rebuilds it. `cloak-v0.3.0` is
+  `790cd12`, SHA-256 `f461271d...a6fa467`. Never rebuilt, overwritten or moved.
 - **Python** for `cloak_dev/tools/` runs only in the conda environment `muscle-cloak`
   (`cloak_dev/environment.yml`, standard library only), never in the Windows or Debian system
   Python: `~/anaconda3/bin/conda run --no-capture-output -n muscle-cloak python ...`. The one
@@ -120,8 +124,9 @@ bash /mnt/c/Users/peter/BioInformatics/muscle/cloak_dev/scripts/test_oom.sh     
 - Gaps are `-` and `.`, as in the `Ensemble` loader (decision 008, from the `.` commit of 0.3.0;
   earlier CLOAK numbered `.` as a residue, ANALYSIS.md); output gaps are `-`.
 - Versions are tags `cloak-vMAJOR.MINOR.PATCH` on `cloak`. `cloak-v0.2.0` (`ddc9df1`) is the
-  speed rewrite, byte-identical to `cloak-v0.1.0`; `cloak-v0.3.0` computes the published
-  definition and relates to 0.1.0 exactly (decision 003).
+  speed rewrite, byte-identical to `cloak-v0.1.0`; `cloak-v0.3.0` (`790cd12`, the first release
+  to users) computes the published definition and relates to 0.1.0 exactly (decision 003). A
+  release's notes are its annotated tag message, which cannot be changed once pushed.
 
 ## Gotchas
 
