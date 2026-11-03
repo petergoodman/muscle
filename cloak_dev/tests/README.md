@@ -104,6 +104,10 @@ build.
   `scripts/ubsan.supp` silences MUSCLE's known null `memcpy` argument in `fasta2.cpp`. Address-space
   caps are lifted with `CLOAK_VMEM_KB=unlimited`, which every test script honours. Valgrind is not
   installed in the WSL image and is not run.
+- **Warnings.** `scripts/warn_diff.sh` compiles `cloak.cpp` and `ddc9df1`'s with g++ and clang++
+  (the Makefile's flags, optimiser on), at `-Wall -Wextra` (gating) and with `-Wconversion
+  -Wsign-conversion` (counted only). Warnings are compared without line numbers; a new gating
+  warning fails.
 
 ## Measured (2026-11-02, laptop, WSL Debian 12)
 
@@ -118,6 +122,7 @@ build.
 | `.` commit, `test.sh commit` | every part passes: hand 42 of 42; random 800 comparisons (680 against `f3559af`, 289 against `cloak.py`) and 1,513 relation checks, 0 failed, 0 skipped. The red step is the errors commit's failing set (5 hand cases, 20 tiny and 143 random comparisons, all `.`) |
 | sanitizers, `e0eda41` | `build_variant.sh asan` 2.5 min; `test_sanitize.sh`: hand 42 of 42, errors 5 of 5, quick 23 of 23, tiny pass; no report; 43 s |
 | sanitizers, positive control | mutant M09 (`n = 0` guard removed) on the asan tree fails E06 with exit 134 (`_GLIBCXX_ASSERTIONS`: `operator[]` out of range) |
+| warnings, `e0eda41` against `ddc9df1` | g++ 12 and clang++ 14: 4 gating warnings each, all in MUSCLE's headers (`mx.h`, `mysparsemx.h`, `tree.h`), none new; with conversion warnings 11 and 10, none new; 36 s. Positive control: an unused variable is reported as new by both |
 | positive control, errors commit | `test.sh commit` on `oracle_bin.sh`: every part passes (errors 5 of 5), oom reported `n/a` |
 
 The last row means that, wherever the known defects cannot act, both old binaries agree with the

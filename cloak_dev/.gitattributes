@@ -4,5 +4,6 @@
 *.py     text eol=lf
 *.yml    text eol=lf
 *.txt    text eol=lf
+*.supp   text eol=lf
 # Test data are compared byte for byte: never convert them.
 tests/data/** -text
